@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpendWise – Student Expense Tracking & Budget Management</title>
+    <link rel="stylesheet" href="style.css?v=2.5">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- EmailJS SDK (Free client-side library for sending real emails to recipient's mobile inbox) -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+    <!-- Main Application Container -->
+    <div class="app-container">
+        <!-- Navigation Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="brand-logo">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>SpendWise</h1>
+                    <p class="subtitle">Student Expense Tracking & Budget Management</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button id="btn-quick-add" class="btn btn-primary" title="Add New Transaction">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Add Transaction</span>
+                </button>
+
+                <button id="theme-toggle" class="btn btn-icon" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+                    <svg id="sun-icon" class="theme-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg id="moon-icon" class="theme-icon hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+
+                <button id="btn-export-csv" class="btn btn-outline" title="Export Data to CSV">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span class="btn-text">Export CSV</span>
+                </button>
+
+                <button id="btn-reset-data" class="btn btn-danger-outline" title="Clear All Data">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    <span class="btn-text">Clear All Data</span>
+                </button>
+
+                <!-- Header Login / Register Button (Shown when logged out) -->
+                <button id="btn-header-login" class="btn btn-outline" title="Student Login / Register">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                        <polyline points="10 17 15 12 10 7"></polyline>
+                        <line x1="15" y1="12" x2="3" y2="12"></line>
+                    </svg>
+                    <span class="btn-text">Login / Register</span>
+                </button>
+
+                <!-- User Profile Badge & Logout -->
+                <div id="user-profile-badge" class="user-profile-badge hidden">
+                    <div class="user-avatar" id="header-user-avatar">N</div>
+                    <div class="user-info-text">
+                        <span class="user-name" id="header-user-name">Nikita</span>
+                        <span class="user-role">Student</span>
+                    </div>
+                    <button id="btn-logout" class="btn btn-sm btn-outline btn-logout" title="Log Out">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span class="btn-text">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="app-nav">
+            <button class="nav-tab active" data-tab="dashboard">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                <span>Dashboard Overview</span>
+            </button>
+            <button class="nav-tab" data-tab="add-transaction">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                <span>Add / Edit Transaction</span>
+            </button>
+            <button class="nav-tab" data-tab="history">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                <span>Transaction History</span>
+            </button>
+            <button class="nav-tab" data-tab="budget">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+                <span>Monthly Budget</span>
+            </button>
+            <button class="nav-tab" data-tab="analysis">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                <span>Spending Analysis</span>
+            </button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="app-main">
+            <!-- SUMMARY CARDS SECTION (Visible across views) -->
+            <section class="summary-cards-grid">
+                <!-- 1. Total Income -->
+                <div class="summary-card income-card">
+                    <div class="card-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="19" x2="12" y2="5"></line>
+                            <polyline points="5 12 12 5 19 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="card-info">
+                        <span class="card-title">Total Income</span>
+                        <h2 id="total-income-display">₹0</h2>
+                        <span class="card-subtext">Sum of all income</span>
+                    </div>
+                </div>
+
+                <!-- 2. Total Expenses -->
+                <div class="summary-card expense-card">
+                    <div class="card-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <polyline points="19 12 12 19 5 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="card-info">
+                        <span class="card-title">Total Expenses</span>
+                        <h2 id="total-expense-display">₹0</h2>
+                        <span class="card-subtext">Sum of all expenses</span>
+                    </div>
+                </div>
+
+                <!-- 3. Available Balance -->
+                <div class="summary-card balance-card">
+                    <div class="card-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                            <line x1="2" y1="10" x2="22" y2="10"></line>
+                        </svg>
+                    </div>
+                    <div class="card-info">
+                        <span class="card-title">Available Balance</span>
+                        <h2 id="available-balance-display">₹0</h2>
+                        <span id="balance-status-badge" class="badge badge-success">Positive</span>
+                    </div>
+                </div>
+
+                <!-- 4. Monthly Budget -->
+                <div class="summary-card budget-card">
+                    <div class="card-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                    <div class="card-info">
+                        <span class="card-title">Monthly Budget</span>
+                        <h2 id="monthly-budget-display">₹0</h2>
+                        <span id="budget-rem-subtext" class="card-subtext">Remaining: ₹0</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 1: DASHBOARD OVERVIEW -->
+            <section id="tab-dashboard" class="tab-content active">
+                <div class="dashboard-grid">
+                    <!-- Left Side: Budget Card & Category Quick Breakdown -->
+                    <div class="dashboard-left-col">
+                        <!-- Budget Status Widget -->
+                        <div class="content-card">
+                            <div class="card-header">
+                                <h3>Monthly Budget Monitor</h3>
+                                <button id="btn-edit-budget-inline" class="btn btn-sm btn-outline">Edit Budget</button>
+                            </div>
+                            <div class="budget-progress-container">
+                                <div class="budget-meta">
+                                    <span>Spent: <strong id="dash-spent-amount">₹0</strong></span>
+                                    <span>Limit: <strong id="dash-budget-amount">₹0</strong></span>
+                                </div>
+                                <div class="progress-bar-track">
+                                    <div id="dash-budget-progress-fill" class="progress-bar-fill" style="width: 0%;"></div>
+                                </div>
+                                <div class="budget-footer-meta">
+                                    <span id="dash-budget-percent-text">0% Used</span>
+                                    <span id="dash-budget-remaining-text">Remaining: ₹0</span>
+                                </div>
+                            </div>
+                            <div id="budget-warning-alert" class="alert-banner alert-warning hidden">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                                <span id="budget-warning-message">Warning: You have exceeded 90% of your monthly budget!</span>
+                            </div>
+                        </div>
+
+                        <!-- Category Overview Widget -->
+                        <div class="content-card">
+                            <div class="card-header">
+                                <h3>Spending by Category</h3>
+                                <button class="btn btn-sm btn-text-link switch-tab" data-target="analysis">View Details &rarr;</button>
+                            </div>
+                            <div id="category-quick-bars" class="category-quick-list">
+                                <!-- Generated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Side: Recent Transactions -->
+                    <div class="dashboard-right-col">
+                        <div class="content-card">
+                            <div class="card-header">
+                                <h3>Recent Transactions</h3>
+                                <button class="btn btn-sm btn-outline switch-tab" data-target="history">View All</button>
+                            </div>
+                            <div class="recent-list-container">
+                                <ul id="recent-transactions-list" class="recent-transactions-list">
+                                    <!-- Populated dynamically by JS -->
+                                </ul>
+                                <div id="recent-empty-state" class="empty-state hidden">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                                    </svg>
+                                    <p>No recent transactions recorded.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: ADD / EDIT TRANSACTION FORM -->
+            <section id="tab-add-transaction" class="tab-content">
+                <div class="form-container-card content-card">
+                    <div class="card-header">
+                        <h3 id="form-section-title">Add New Transaction</h3>
+                        <button id="btn-cancel-edit" class="btn btn-sm btn-outline hidden">Cancel Editing</button>
+                    </div>
+
+                    <!-- Inline Error Notification -->
+                    <div id="form-error-banner" class="alert-banner alert-danger hidden">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <span id="form-error-text">Please fill out all required fields correctly.</span>
+                    </div>
+
+                    <form id="transaction-form" novalidate>
+                        <input type="hidden" id="tx-id" value="">
+
+                        <!-- Transaction Type Selector -->
+                        <div class="form-group">
+                            <label class="form-label">Transaction Type <span class="required">*</span></label>
+                            <div class="type-selector-grid">
+                                <label class="type-option-card">
+                                    <input type="radio" name="tx-type" value="Income">
+                                    <div class="type-card-body income-type">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="12" y1="19" x2="12" y2="5"></line>
+                                            <polyline points="5 12 12 5 19 12"></polyline>
+                                        </svg>
+                                        <span>Income</span>
+                                    </div>
+                                </label>
+                                <label class="type-option-card">
+                                    <input type="radio" name="tx-type" value="Expense" checked>
+                                    <div class="type-card-body expense-type">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <polyline points="19 12 12 19 5 12"></polyline>
+                                        </svg>
+                                        <span>Expense</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <!-- Transaction Name -->
+                            <div class="form-group col-md-6">
+                                <label for="tx-name" class="form-label">Transaction Name / Description <span class="required">*</span></label>
+                                <input type="text" id="tx-name" class="form-input" placeholder="e.g., Monthly Allowance, Lunch, Textbooks" required>
+                            </div>
+
+                            <!-- Amount -->
+                            <div class="form-group col-md-6">
+                                <label for="tx-amount" class="form-label">Amount (₹) <span class="required">*</span></label>
+                                <input type="number" id="tx-amount" class="form-input" min="0.01" step="0.01" placeholder="e.g., 500" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <!-- Category -->
+                            <div class="form-group col-md-4">
+                                <label for="tx-category" class="form-label">Category <span class="required">*</span></label>
+                                <select id="tx-category" class="form-select" required>
+                                    <option value="" disabled selected>Select Category</option>
+                                    <option value="Food">Food</option>
+                                    <option value="Travel">Travel</option>
+                                    <option value="Education">Education</option>
+                                    <option value="Shopping">Shopping</option>
+                                    <option value="Entertainment">Entertainment</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <!-- Date -->
+                            <div class="form-group col-md-4">
+                                <label for="tx-date" class="form-label">Date <span class="required">*</span></label>
+                                <input type="date" id="tx-date" class="form-input" required>
+                            </div>
+
+                            <!-- Payment Method -->
+                            <div class="form-group col-md-4">
+                                <label for="tx-payment" class="form-label">Payment Method <span class="required">*</span></label>
+                                <select id="tx-payment" class="form-select" required>
+                                    <option value="" disabled selected>Select Method</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="UPI">UPI</option>
+                                    <option value="Card">Card</option>
+                                    <option value="Bank Transfer">Bank Transfer</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Optional Notes -->
+                        <div class="form-group">
+                            <label for="tx-notes" class="form-label">Optional Notes</label>
+                            <textarea id="tx-notes" class="form-textarea" rows="3" placeholder="Add additional details or reference numbers..."></textarea>
+                        </div>
+
+                        <!-- Form Submission Buttons -->
+                        <div class="form-actions">
+                            <button type="submit" id="btn-submit-tx" class="btn btn-primary btn-lg">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                <span>Save Transaction</span>
+                            </button>
+                            <button type="button" id="btn-reset-form" class="btn btn-secondary btn-lg">Reset Form</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- TAB 3: TRANSACTION HISTORY -->
+            <section id="tab-history" class="tab-content">
+                <div class="content-card">
+                    <div class="card-header flex-wrap">
+                        <h3>Transaction History</h3>
+                        <span id="tx-count-badge" class="badge badge-neutral">0 Transactions</span>
+                    </div>
+
+                    <!-- Search and Filter Toolbar -->
+                    <div class="filter-toolbar">
+                        <div class="filter-item search-box">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" id="search-tx-name" class="form-input" placeholder="Search by name or note...">
+                        </div>
+
+                        <div class="filter-item">
+                            <select id="filter-category" class="form-select">
+                                <option value="All">All Categories</option>
+                                <option value="Food">Food</option>
+                                <option value="Travel">Travel</option>
+                                <option value="Education">Education</option>
+                                <option value="Shopping">Shopping</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-item">
+                            <select id="filter-type" class="form-select">
+                                <option value="All">All Types</option>
+                                <option value="Income">Income Only</option>
+                                <option value="Expense">Expense Only</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-item">
+                            <input type="date" id="filter-date" class="form-input" title="Filter by Date">
+                        </div>
+
+                        <button id="btn-clear-filters" class="btn btn-sm btn-outline">Clear Filters</button>
+                    </div>
+
+                    <!-- Responsive Transaction Table -->
+                    <div class="table-responsive">
+                        <table class="data-table" id="transaction-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Type</th>
+                                    <th>Payment Method</th>
+                                    <th>Amount</th>
+                                    <th>Notes</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transaction-tbody">
+                                <!-- Dynamic Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Empty State for Table -->
+                    <div id="table-empty-state" class="empty-state hidden">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <p id="table-empty-text">No transactions found. Add a new transaction to get started!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: MONTHLY BUDGET -->
+            <section id="tab-budget" class="tab-content">
+                <div class="budget-section-grid">
+                    <!-- Set/Manage Budget Form Card -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3>Manage Monthly Budget</h3>
+                        </div>
+                        <p class="section-desc">Set your total monthly spending target to maintain healthy financial habits.</p>
+                        
+                        <form id="budget-setting-form" class="budget-form">
+                            <div class="form-group">
+                                <label for="input-monthly-budget" class="form-label">Target Monthly Budget (₹)</label>
+                                <div class="input-with-btn">
+                                    <input type="number" id="input-monthly-budget" class="form-input" min="0" step="100" placeholder="e.g. 5000" required>
+                                    <button type="submit" class="btn btn-primary">Update Budget</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Budget Metrics & Details Card -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3>Budget Summary</h3>
+                            <span id="budget-status-pill" class="badge badge-success">On Track</span>
+                        </div>
+
+                        <div class="budget-metrics-grid">
+                            <div class="metric-box">
+                                <span class="metric-label">Monthly Budget</span>
+                                <h4 id="bm-budget-amount">₹0</h4>
+                            </div>
+                            <div class="metric-box">
+                                <span class="metric-label">Amount Spent</span>
+                                <h4 id="bm-spent-amount" class="text-danger">₹0</h4>
+                            </div>
+                            <div class="metric-box">
+                                <span class="metric-label">Remaining Budget</span>
+                                <h4 id="bm-remaining-amount" class="text-success">₹0</h4>
+                            </div>
+                            <div class="metric-box">
+                                <span class="metric-label">Usage Percentage</span>
+                                <h4 id="bm-usage-percent">0%</h4>
+                            </div>
+                        </div>
+
+                        <div class="progress-bar-container mt-4">
+                            <div class="progress-bar-meta">
+                                <span>Budget Consumption</span>
+                                <span id="bm-progress-label">0%</span>
+                            </div>
+                            <div class="progress-bar-track lg">
+                                <div id="bm-progress-fill" class="progress-bar-fill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+
+                        <div id="bm-warning-banner" class="alert-banner alert-danger mt-4 hidden">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <div>
+                                <strong>Budget Exceeded Alert!</strong>
+                                <p id="bm-warning-text">You have spent more than your allocated budget for this month. Try reducing non-essential expenses!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: SPENDING ANALYSIS -->
+            <section id="tab-analysis" class="tab-content">
+                <div class="analysis-grid">
+                    <!-- Donut Chart & Category Table -->
+                    <div class="content-card col-span-2">
+                        <div class="card-header">
+                            <h3>Category-Wise Expense Breakdown</h3>
+                        </div>
+
+                        <div class="chart-and-legend-grid">
+                            <!-- Dynamic SVG Donut Chart -->
+                            <div class="chart-container">
+                                <svg id="category-donut-chart" viewBox="0 0 200 200" width="180" height="180">
+                                    <!-- Dynamic Donut Paths via JS -->
+                                </svg>
+                                <div class="chart-center-text">
+                                    <span class="center-title">Expenses</span>
+                                    <span id="chart-total-expense" class="center-amount">₹0</span>
+                                </div>
+                            </div>
+
+                            <!-- Category Expense Cards List -->
+                            <div id="category-breakdown-list" class="category-breakdown-list">
+                                <!-- Dynamic Category breakdown bars generated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method Breakdown -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3>Payment Method Share</h3>
+                        </div>
+                        <div id="payment-method-breakdown" class="payment-method-list">
+                            <!-- Generated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>SpendWise – Personal Expense Tracking & Budget Management Web Application</p>
+            <p class="footer-sub">Designed for Students & Young Professionals • Web Technology Project</p>
+        </footer>
+    </div>
+
+    <!-- MODAL: DELETE CONFIRMATION -->
+    <div id="modal-delete" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Confirm Deletion</h3>
+                <button class="modal-close btn-close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this transaction?</p>
+                <p class="modal-subtext" id="delete-tx-details"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-close-modal">Cancel</button>
+                <button id="btn-confirm-delete" class="btn btn-danger">Delete Transaction</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: RESET ALL DATA CONFIRMATION -->
+    <div id="modal-reset" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Reset All Application Data</h3>
+                <button class="modal-close btn-close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert-banner alert-danger">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <span>Warning: This action cannot be undone.</span>
+                </div>
+                <p class="mt-3">Are you sure you want to delete all transactions and reset your budget to default values?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-close-modal">Cancel</button>
+                <button id="btn-confirm-reset" class="btn btn-danger">Yes, Reset All Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTHENTICATION OVERLAY & MODAL (LOGIN / REGISTRATION / EMAIL OTP) -->
+    <div id="auth-overlay" class="auth-overlay hidden">
+        <div class="auth-card" style="position: relative;">
+            <button class="modal-close" id="btn-close-auth" title="Close dialog" style="position: absolute; top: 14px; right: 18px; font-size: 1.8rem; background: none; border: none; cursor: pointer;">&times;</button>
+            <!-- Brand Header -->
+            <div class="auth-header">
+                <div class="brand-logo auth-logo">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                </div>
+                <h2>SpendWise</h2>
+                <p id="auth-subtitle">Student Expense Tracking & Budget Management</p>
+            </div>
+
+            <!-- Error Banner -->
+            <div id="auth-error-banner" class="alert-banner alert-danger hidden">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span id="auth-error-text">Please enter valid credentials.</span>
+            </div>
+
+            <!-- VIEW 1: LOGIN -->
+            <div id="view-login" class="auth-view active">
+                <h3 class="auth-title">Student Login</h3>
+                <p class="auth-desc">Enter your registered email and password to continue.</p>
+
+                <form id="form-login" novalidate>
+                    <div class="form-group">
+                        <label for="login-email" class="form-label">Email Address / User ID <span class="required">*</span></label>
+                        <input type="email" id="login-email" class="form-input" placeholder="e.g. nikita@spendwise.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login-password" class="form-label">Password <span class="required">*</span></label>
+                        <div class="password-wrapper">
+                            <input type="password" id="login-password" class="form-input" placeholder="Enter password" required>
+                            <button type="button" class="btn-toggle-pwd" data-target="login-password" title="Show/Hide">👁️</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block btn-lg mt-3">
+                        <span>Sign In</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
+                </form>
+
+                <div class="auth-demo-hint">
+                    <span>💡 Default Demo Credentials:</span>
+                    <div><code>nikita@spendwise.com</code> • Password: <code>123456</code></div>
+                </div>
+
+                <div class="auth-switch">
+                    <span>New user?</span>
+                    <button type="button" id="btn-goto-register" class="btn-text-link">Register with Email OTP</button>
+                </div>
+            </div>
+
+            <!-- VIEW 2: REGISTRATION -->
+            <div id="view-register" class="auth-view hidden">
+                <h3 class="auth-title">Create Account</h3>
+                <p class="auth-desc">Enter your details to register. An OTP will be sent to your email.</p>
+
+                <form id="form-register" novalidate>
+                    <div class="form-group">
+                        <label for="reg-name" class="form-label">Full Name <span class="required">*</span></label>
+                        <input type="text" id="reg-name" class="form-input" placeholder="e.g. Nikita G." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reg-email" class="form-label">Email Address <span class="required">*</span></label>
+                        <input type="email" id="reg-email" class="form-input" placeholder="e.g. student@gmail.com" required>
+                        <span class="input-helper">A 6-digit OTP will be generated and delivered to this email.</span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="reg-password" class="form-label">Password <span class="required">*</span></label>
+                            <input type="password" id="reg-password" class="form-input" placeholder="Min 6 chars" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="reg-confirm-password" class="form-label">Confirm Password <span class="required">*</span></label>
+                            <input type="password" id="reg-confirm-password" class="form-input" placeholder="Repeat password" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-send-otp" class="btn btn-primary btn-block btn-lg mt-3">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                        <span>Send Email OTP</span>
+                    </button>
+                </form>
+
+                <div class="auth-switch">
+                    <span>Already have an account?</span>
+                    <button type="button" id="btn-goto-login" class="btn-text-link">Back to Login</button>
+                </div>
+            </div>
+
+            <!-- VIEW 3: OTP VERIFICATION -->
+            <div id="view-otp" class="auth-view hidden">
+                <div class="otp-badge-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                </div>
+
+                <h3 class="auth-title">Verify Email OTP</h3>
+                
+                <!-- Email Dispatched Notification Banner (Code NOT shown on screen) -->
+                <div class="email-sent-card">
+                    <div class="email-sent-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                    </div>
+                    <div class="email-sent-info">
+                        <strong>OTP Sent to Your Email!</strong>
+                        <p>A 6-digit verification code was sent to:<br><strong id="otp-display-email" class="email-highlight">user@example.com</strong></p>
+                        <small class="text-muted">Check your Email Inbox / Spam folder on your mobile phone, then enter the code below to verify.</small>
+                    </div>
+                </div>
+
+                <!-- Hidden Backup Toggle for Viva / College Demonstration -->
+                <div class="viva-demo-toggle">
+                    <button type="button" id="btn-toggle-demo-otp" class="btn-text-link sm">🔍 Examiner / Offline Backup Code</button>
+                    <div id="viva-demo-box" class="viva-demo-box hidden">
+                        <span>Backup Code: <strong id="simulated-otp-code">------</strong></span>
+                    </div>
+                </div>
+
+                <form id="form-verify-otp" novalidate>
+                    <div class="form-group mt-3">
+                        <label for="otp-input" class="form-label text-center">Enter 6-Digit OTP <span class="required">*</span></label>
+                        <input type="text" id="otp-input" class="form-input text-center otp-input-field" maxlength="6" placeholder="• • • • • •" autocomplete="one-time-code" required>
+                    </div>
+
+                    <div class="otp-timer-row">
+                        <span id="otp-timer-text">Resend code in <strong id="otp-seconds">60</strong>s</span>
+                        <button type="button" id="btn-resend-otp" class="btn-text-link hidden">Resend OTP Now</button>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block btn-lg mt-3">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>Verify OTP & Create Account</span>
+                    </button>
+
+                    <button type="button" id="btn-back-to-reg" class="btn btn-outline btn-block mt-2">Change Email / Edit Details</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="script.js?v=2.5"></script>
+</body>
+</html>
