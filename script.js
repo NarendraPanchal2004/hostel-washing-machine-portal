@@ -859,13 +859,22 @@
      * Supabase Connection Setup Modal
      */
     function initSetupModal() {
-        elements.dbStatusPill.addEventListener('click', () => {
+        const openDbSetup = () => {
             const config = window.AppConfig.getConfig();
             elements.setupSupabaseUrl.value = config.supabaseUrl || '';
             elements.setupSupabaseAnonKey.value = config.supabaseAnonKey || '';
             elements.setupTestResult.style.display = 'none';
             openModal(elements.setupModal);
-        });
+        };
+
+        if (elements.dbStatusPill) {
+            elements.dbStatusPill.addEventListener('click', openDbSetup);
+        }
+
+        const btnAdminDb = document.getElementById('btn-admin-db-settings');
+        if (btnAdminDb) {
+            btnAdminDb.addEventListener('click', openDbSetup);
+        }
 
         elements.btnTestSupabaseConn.addEventListener('click', async () => {
             const url = elements.setupSupabaseUrl.value.trim();

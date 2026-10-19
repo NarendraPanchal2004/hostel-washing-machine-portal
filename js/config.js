@@ -13,7 +13,7 @@ const AppConfig = (function () {
 
     // Default configuration (Safe placeholders - no secrets)
     const defaults = {
-        supabaseUrl: '',
+        supabaseUrl: 'https://zhurgvwsaawacmukbvbi.supabase.co',
         supabaseAnonKey: '',
         hostelName: 'Boys & Girls Hostel Laundry Wing',
         slotDurationMinutes: 75,

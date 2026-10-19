@@ -39,12 +39,6 @@
             </div>
 
             <div class="header-actions">
-                <!-- Real-time Database Status Pill -->
-                <div id="db-status-pill" class="status-pill" title="Click to configure Supabase connection" style="cursor: pointer;">
-                    <span id="db-status-dot" class="status-dot"></span>
-                    <span id="db-status-text">Checking Database...</span>
-                </div>
-
                 <!-- 4 Machine QR Codes Modal Trigger -->
                 <button id="btn-show-all-qr" class="btn btn-secondary" title="View & Print 4 Machine QR Codes">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -396,6 +390,7 @@
                     <span>Hostel Laundry Admin Control Center</span>
                 </h3>
                 <div style="display: flex; align-items: center; gap: 8px;">
+                    <button type="button" id="btn-admin-db-settings" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" title="Configure Supabase Database">⚙️ DB Config</button>
                     <button type="button" id="btn-admin-logout" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">Logout</button>
                     <button type="button" class="modal-close-btn" data-close="admin-dashboard-modal">&times;</button>
                 </div>
@@ -522,11 +517,11 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Application Controller Scripts -->
-    <script src="js/config.js?v=3.3"></script>
-    <script src="js/supabaseClient.js?v=3.3"></script>
-    <script src="js/bookingService.js?v=3.3"></script>
-    <script src="js/adminService.js?v=3.3"></script>
-    <script src="js/qrService.js?v=3.3"></script>
-    <script src="script.js?v=3.3"></script>
+    <script src="js/config.js?v=3.4"></script>
+    <script src="js/supabaseClient.js?v=3.4"></script>
+    <script src="js/bookingService.js?v=3.4"></script>
+    <script src="js/adminService.js?v=3.4"></script>
+    <script src="js/qrService.js?v=3.4"></script>
+    <script src="script.js?v=3.4"></script>
 </body>
 </html>
