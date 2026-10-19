@@ -13,3 +13,8 @@ test_scenarios.txt
 Thumbs.db
 .vscode/
 .idea/
+
+# Node and Environment
+node_modules/
+.env
+*.log

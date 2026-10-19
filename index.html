@@ -1,736 +1,532 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bank Account Management System - Nikita Bank of Loni</title>
-  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
-  <style>
-    body {
-      background-color: #f1f5f9;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    .console-text {
-      font-family: 'Consolas', 'Courier New', Courier, monospace;
-      font-size: 1.1rem;
-      line-height: 1.6;
-    }
-  </style>
-</head>
-<body class="text-slate-900 antialiased p-4 md:p-8 min-h-screen">
-
-  <div class="max-w-7xl mx-auto space-y-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hostel Washing Machine Booking Portal</title>
+    <link rel="stylesheet" href="style.css?v=3.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- TOP HEADER -->
-    <header class="bg-white border border-slate-300 rounded-2xl p-6 md:p-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-      <div>
-        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">Nikita Bank of Loni</h1>
-        <p class="text-slate-600 text-base md:text-lg font-medium mt-1">Bank Account Management System & Digital Banking Portal</p>
-      </div>
-      <div class="flex items-center gap-4">
-        <button onclick="resetSystem()" class="text-base bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-5 py-3 rounded-xl border border-slate-300 transition flex items-center gap-2">
-          <span>🔄 Reset App</span>
-        </button>
-        <a href="main.cpp" download class="text-base bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition shadow-md flex items-center gap-2">
-          <span>📄 Download Code</span>
-        </a>
-      </div>
-    </header>
+    <!-- Supabase JS Client v2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- QRCode.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- jsPDF & autoTable for date-wise PDF report generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Application Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="brand-logo" title="Hostel Washing Machine Portal">
+                    <!-- Washing Machine SVG Icon -->
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                        <circle cx="12" cy="13" r="5"></circle>
+                        <path d="M12 18a5 5 0 0 0 4-2"></path>
+                        <circle cx="8" cy="6" r="1"></circle>
+                        <circle cx="12" cy="6" r="1"></circle>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>HostelWash</h1>
+                    <p class="subtitle">Shared Laundry Slot Booking • 4 Machines (All 9.0 Kg Heavy Duty)</p>
+                </div>
+            </div>
 
-    <!-- MAIN TWO-COLUMN WORKSPACE -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      
-      <!-- LEFT COLUMN: CONSOLE TERMINAL, CONTROLS & PASSBOOK (7 COLS) -->
-      <div class="lg:col-span-7 space-y-6">
-        
-        <!-- TERMINAL WINDOW -->
-        <div class="bg-white border border-slate-300 rounded-2xl p-6 shadow-sm space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-            <div class="flex items-center gap-3">
-              <span class="w-3.5 h-3.5 rounded-full bg-red-500"></span>
-              <span class="w-3.5 h-3.5 rounded-full bg-amber-500"></span>
-              <span class="w-3.5 h-3.5 rounded-full bg-emerald-500"></span>
-              <span class="text-base font-mono text-slate-700 font-bold ml-2">System Terminal Console</span>
-            </div>
-            <span class="text-xs font-bold bg-slate-100 text-slate-700 px-3 py-1 rounded-lg border border-slate-300 uppercase">Live Screen</span>
-          </div>
+            <div class="header-actions">
+                <!-- Real-time Database Status Pill -->
+                <div id="db-status-pill" class="status-pill" title="Click to configure Supabase connection" style="cursor: pointer;">
+                    <span id="db-status-dot" class="status-dot"></span>
+                    <span id="db-status-text">Checking Database...</span>
+                </div>
 
-          <!-- TERMINAL DISPLAY -->
-          <div id="terminalOutput" class="console-text bg-slate-900 text-emerald-400 p-5 rounded-xl h-[300px] overflow-y-auto shadow-inner whitespace-pre-wrap">===== NIKITA BANK OF LONI =====
-1. Create Account
-2. Access Existing Account
-3. Deposit Money
-4. Withdraw Money
-5. Check Balance
-6. Display Account Details
-7. ATM Card
-8. Exit
+                <!-- 4 Machine QR Codes Modal Trigger -->
+                <button id="btn-show-all-qr" class="btn btn-secondary" title="View & Print 4 Machine QR Codes">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>Machine QR Codes</span>
+                </button>
 
-Select an action from the buttons below:</div>
+                <!-- Admin Portal Button -->
+                <button id="btn-admin-auth" class="btn btn-outline" title="Admin Login / Dashboard">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span id="admin-btn-text">Admin Login</span>
+                </button>
 
-          <!-- MENU BUTTONS -->
-          <div class="pt-3 border-t border-slate-200">
-            <label class="text-xs font-extrabold uppercase tracking-wider text-slate-600 block mb-3">Select System Action (1 - 8):</label>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <button onclick="showCreateModal()" class="bg-blue-50 hover:bg-blue-100 border-2 border-blue-300 text-blue-950 text-xs font-bold py-2.5 px-3 rounded-xl text-left transition shadow-xs">
-                1. Create Account
-              </button>
-              <button onclick="showAccessModal()" class="bg-indigo-50 hover:bg-indigo-100 border-2 border-indigo-300 text-indigo-950 text-xs font-bold py-2.5 px-3 rounded-xl text-left transition shadow-xs">
-                2. Access Account
-              </button>
-              <button onclick="showDepositModal()" class="bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-300 text-emerald-950 text-xs font-bold py-2.5 px-3 rounded-xl text-left transition shadow-xs">
-                3. Deposit Money
-              </button>
-              <button onclick="showWithdrawModal()" class="bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 text-amber-950 text-xs font-bold py-2.5 px-3 rounded-xl text-left transition shadow-xs">
-                4. Withdraw Money
-              </button>
-              <button onclick="showCheckBalanceModal()" class="bg-purple-50 hover:bg-purple-100 border-2 border-purple-300 text-purple-950 text-xs font-bold py-2.5 px-3 rounded-xl text-left transition shadow-xs">
-                5. Check Balance
-              </button>
-              <button onclick="showDisplayDetailsModal()" class="bg-cyan-50 hover:bg-cyan-100 border-2 border-cyan-300 text-cyan-950 text-xs font-bold py-2.5 px-3 rounded-xl text-left transition shadow-xs">
-                6. Display Details
-              </button>
-              <button onclick="showATMCardModal()" class="bg-teal-50 hover:bg-teal-100 border-2 border-teal-300 text-teal-950 text-xs font-bold py-2.5 px-3 rounded-xl text-left transition shadow-xs">
-                7. ATM Card
-              </button>
-              <button onclick="exitAction()" class="bg-red-50 hover:bg-red-100 border-2 border-red-300 text-red-950 text-xs font-bold py-2.5 px-3 rounded-xl text-left transition shadow-xs">
-                8. Exit System
-              </button>
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle" class="btn btn-icon" title="Toggle Light / Dark Theme" aria-label="Toggle Theme">
+                    <svg id="sun-icon" class="theme-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg id="moon-icon" class="theme-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
             </div>
-          </div>
-        </div>
+        </header>
 
-        <!-- BANK PASSBOOK COMPONENT -->
-        <div class="bg-amber-50/80 border-2 border-amber-200 rounded-2xl p-6 shadow-sm space-y-4">
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-amber-300/60 pb-3 gap-3">
-            <div class="flex items-center gap-3">
-              <span class="text-3xl">📘</span>
-              <div>
-                <h2 class="text-lg font-extrabold text-amber-950">NIKITA BANK OF LONI - PASSBOOK</h2>
-                <p class="text-xs text-amber-800 font-medium">Official Savings Account Passbook Record</p>
-              </div>
+        <!-- KPI Summary Cards -->
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon available">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <div class="kpi-info">
+                    <h3 id="kpi-available-count">4 / 4</h3>
+                    <p>Machines Available</p>
+                </div>
             </div>
-            <div class="flex items-center gap-3">
-              <span class="text-xs font-mono font-bold bg-amber-200/80 text-amber-900 px-3 py-1 rounded-lg border border-amber-400">PASSBOOK NO: NBL-8821</span>
-              <button onclick="downloadStatement()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition shadow-md flex items-center gap-1.5">
-                <span>⬇️ Download Statement</span>
-              </button>
-            </div>
-          </div>
 
-          <!-- PASSBOOK ACCOUNT DETAILS BANNER -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-white p-4 rounded-xl border border-amber-200 text-xs font-mono">
-            <div>
-              <span class="text-slate-500 block text-[10px] uppercase">Holder Name</span>
-              <span id="pbName" class="font-bold text-slate-900 text-sm">Nikita</span>
+            <div class="kpi-card">
+                <div class="kpi-icon busy">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
+                <div class="kpi-info">
+                    <h3 id="kpi-inuse-count">0</h3>
+                    <p>Washing In Progress</p>
+                </div>
             </div>
-            <div>
-              <span class="text-slate-500 block text-[10px] uppercase">Account Number</span>
-              <span id="pbAccNo" class="font-bold text-slate-900 text-sm">1001</span>
-            </div>
-            <div>
-              <span class="text-slate-500 block text-[10px] uppercase">IFSC / Branch</span>
-              <span class="font-bold text-slate-900">NBLN0001001</span>
-            </div>
-            <div>
-              <span class="text-slate-500 block text-[10px] uppercase">Current Balance</span>
-              <span id="pbBalance" class="font-bold text-emerald-700 text-sm">₹5000.00</span>
-            </div>
-          </div>
 
-          <!-- PASSBOOK STATEMENT ENTRIES TABLE -->
-          <div class="overflow-x-auto bg-white rounded-xl border border-amber-200">
-            <table class="w-full text-left text-xs font-mono">
-              <thead class="bg-amber-100/60 text-amber-950 font-bold border-b border-amber-200">
-                <tr>
-                  <th class="p-2.5">Date</th>
-                  <th class="p-2.5">Transaction Particulars</th>
-                  <th class="p-2.5">Deposit (₹)</th>
-                  <th class="p-2.5">Withdrawal (₹)</th>
-                  <th class="p-2.5 text-right">Balance (₹)</th>
-                </tr>
-              </thead>
-              <tbody id="passbookTableBody" class="divide-y divide-slate-100 text-slate-700">
-                <tr>
-                  <td class="p-2.5 text-slate-500">08-10-2026</td>
-                  <td class="p-2.5 font-bold text-slate-900">Account Opening Initial Deposit</td>
-                  <td class="p-2.5 text-emerald-600 font-bold">+5000.00</td>
-                  <td class="p-2.5 text-slate-400">-</td>
-                  <td class="p-2.5 text-right font-bold text-slate-900">₹5000.00</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- RIGHT COLUMN: CURRENT ACCOUNT INFO & ATM CARD (5 COLS) -->
-      <div class="lg:col-span-5 space-y-6">
-        
-        <!-- CURRENT ACCOUNT INFO CARD -->
-        <div class="bg-white border border-slate-300 rounded-2xl p-6 shadow-sm space-y-5">
-          <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-            <h2 class="text-lg font-bold text-slate-900">Current Account Info</h2>
-            <div class="flex items-center gap-2">
-              <span id="accountBadge" class="text-xs bg-emerald-100 text-emerald-800 font-extrabold px-3 py-1 rounded-full border border-emerald-300">Active</span>
-              <span id="totalAccountsBadge" class="text-xs bg-blue-100 text-blue-800 font-extrabold px-2.5 py-1 rounded-full border border-blue-300">Total: 1</span>
+            <div class="kpi-card">
+                <div class="kpi-icon primary">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                </div>
+                <div class="kpi-info">
+                    <h3 id="kpi-today-bookings">0</h3>
+                    <p>Today's Total Bookings</p>
+                </div>
             </div>
-          </div>
 
-          <div class="space-y-3.5 text-sm">
-            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex justify-between items-center">
-              <span class="text-slate-600 font-medium">Bank Name:</span>
-              <span class="font-bold text-blue-900 text-sm">Nikita Bank of Loni</span>
+            <div class="kpi-card">
+                <div class="kpi-icon warning">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                </div>
+                <div class="kpi-info">
+                    <h3>75 Mins</h3>
+                    <p>Strict Fixed Slot Limit</p>
+                </div>
             </div>
-            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex justify-between items-center">
-              <span class="text-slate-600 font-medium">Account Number:</span>
-              <span id="stateAccNo" class="font-mono font-extrabold text-slate-900 text-base">1001</span>
-            </div>
-            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex justify-between items-center">
-              <span class="text-slate-600 font-medium">Account Holder:</span>
-              <span id="stateName" class="font-extrabold text-slate-900 text-base">Nikita</span>
-            </div>
-            <div class="bg-emerald-50 p-4 rounded-xl border-2 border-emerald-300 flex justify-between items-center">
-              <span class="text-emerald-900 font-bold text-sm">Current Balance:</span>
-              <span id="stateBalance" class="font-mono font-extrabold text-emerald-700 text-xl">₹5000.00</span>
-            </div>
-            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex justify-between items-center">
-              <span class="text-slate-600 font-medium">ATM Card Status:</span>
-              <span id="stateAtmCard" class="font-mono font-bold text-slate-800 text-xs">4567 8912 3456 1001</span>
-            </div>
-          </div>
-        </div>
+        </section>
 
-        <!-- DEMO ATM CARD PREVIEW -->
-        <div id="atmCardPreview" class="bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 border-2 border-indigo-500/40 rounded-2xl p-6 shadow-xl text-white space-y-4 relative overflow-hidden">
-          <div class="flex justify-between items-center border-b border-indigo-500/30 pb-3">
-            <span class="text-xs font-bold uppercase tracking-widest text-indigo-300">ATM DEBIT CARD</span>
-            <span class="text-[10px] bg-indigo-500/20 text-indigo-200 px-2 py-0.5 rounded border border-indigo-400/30">Active Card</span>
-          </div>
-
-          <div class="space-y-1">
-            <p class="text-xs text-amber-400 font-bold tracking-wider uppercase">NIKITA BANK OF LONI</p>
-            <p id="cardNameDisplay" class="text-lg font-bold tracking-wide text-white">Nikita</p>
-          </div>
-
-          <div class="py-2">
-            <p class="text-[10px] text-indigo-300 uppercase font-mono">Card Number</p>
-            <p id="cardNumberDisplay" class="text-xl font-mono font-extrabold tracking-widest text-amber-300">4567 8912 3456 1001</p>
-          </div>
-
-          <div class="flex justify-between items-end text-xs font-mono border-t border-indigo-500/30 pt-3">
-            <div>
-              <span class="text-slate-400 block text-[9px]">ACC NO</span>
-              <span id="cardAccNoDisplay" class="font-bold text-white">1001</span>
+        <!-- 7-Day Date Selector Bar (Today + Next 6 Days) -->
+        <section class="date-selector-bar">
+            <div class="date-selector-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>Select Booking Date (Today & Next 6 Days Available)</span>
             </div>
-            <div>
-              <span class="text-slate-400 block text-[9px]">VALID THRU</span>
-              <span class="font-bold text-white">12/30</span>
+            <div id="date-pills-bar" class="date-pills-container">
+                <!-- Dynamically populated with 7 rolling days -->
             </div>
-            <div>
-              <span class="text-slate-400 block text-[9px]">STATUS</span>
-              <span class="font-bold text-emerald-400">ACTIVE</span>
+        </section>
+
+        <!-- 4 Washing Machines Section Header -->
+        <section class="section-header">
+            <h2 class="section-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                    <circle cx="12" cy="13" r="5"></circle>
+                </svg>
+                <span>Hostel Washing Machines (4 Units • 9.0 Kg Each)</span>
+            </h2>
+            <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+                All 4 heavy-duty 9.0 Kg machines connect to the same PostgreSQL database
             </div>
-          </div>
-        </div>
+        </section>
 
-      </div>
-
+        <!-- 4 Washing Machines Live Grid -->
+        <main class="machines-grid" id="machines-container">
+            <!-- Machine cards rendered by script.js -->
+        </main>
     </div>
 
-  </div>
+    <!-- ===================================================================== -->
+    <!-- MODAL 1: Student 75-Minute Slot Booking Modal                         -->
+    <!-- ===================================================================== -->
+    <div id="booking-modal" class="modal-backdrop">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                    </svg>
+                    <span id="booking-modal-title">Book 75-Minute Washing Slot</span>
+                </h3>
+                <button type="button" class="modal-close-btn" data-close="booking-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="background-color: var(--primary-light); padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.85rem; color: var(--primary-color); font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                    <span>ℹ️</span>
+                    <span>Slots are strictly 75 minutes. Overlap is strictly prevented by PostgreSQL database constraints.</span>
+                </div>
 
-  <!-- INPUT MODAL SIMULATOR -->
-  <div id="inputModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
-    <div class="bg-white border border-slate-300 rounded-2xl p-8 max-w-lg w-full shadow-2xl space-y-6">
-      <h3 id="modalTitle" class="text-xl font-bold text-slate-900">Modal Action</h3>
-      <div id="modalBody" class="space-y-4">
-        <!-- Dynamic Inputs -->
-      </div>
-      <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
-        <button onclick="closeModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 text-base font-bold px-6 py-3 rounded-xl border border-slate-300">Cancel</button>
-        <button id="modalSubmitBtn" onclick="" class="bg-blue-600 hover:bg-blue-700 text-white text-base font-bold px-6 py-3 rounded-xl shadow-md">Submit</button>
-      </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="form-group">
+                        <label class="form-label">Selected Machine</label>
+                        <input type="text" id="bm-machine-name" class="form-input" readonly>
+                        <input type="hidden" id="bm-machine-id">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Selected Date (Today to Today + 6 Days)</label>
+                        <input type="date" id="bm-date" class="form-input" readonly>
+                    </div>
+                </div>
+
+                <!-- 75-Minute Discrete Slots Grid -->
+                <div class="form-group">
+                    <label class="form-label">Choose 75-Minute Time Slot</label>
+                    <div id="bm-slots-grid" class="slots-modal-grid">
+                        <!-- Populated by script.js -->
+                    </div>
+                    <input type="hidden" id="bm-selected-start-iso">
+                    <input type="hidden" id="bm-selected-end-iso">
+                    <p class="form-help" id="bm-slot-summary-text">Please click one of the green available slots above.</p>
+                </div>
+
+                <!-- Student Information Fields -->
+                <div style="border-top: 1px solid var(--border-color); padding-top: 14px; display: flex; flex-direction: column; gap: 12px;">
+                    <h4 style="font-size: 0.95rem; font-weight: 700;">Student Identification</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                        <div class="form-group">
+                            <label class="form-label">Student Full Name *</label>
+                            <input type="text" id="bm-student-name" class="form-input" placeholder="e.g. Narendra Patil" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Room No. / Student Roll No. *</label>
+                            <input type="text" id="bm-student-roll" class="form-input" placeholder="e.g. Room B-304 / Roll 22310311" required>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                        <div class="form-group">
+                            <label class="form-label">Mobile Phone (10 Digits) *</label>
+                            <input type="tel" id="bm-student-phone" class="form-input" placeholder="e.g. 9876543210" maxlength="10" required>
+                            <span class="form-help">Kept private; not visible to other students.</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email Address (Optional)</label>
+                            <input type="email" id="bm-student-email" class="form-input" placeholder="e.g. student@viit.ac.in">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-close="booking-modal">Cancel</button>
+                <button type="button" id="btn-confirm-booking" class="btn btn-primary">
+                    <span>Confirm 75-Min Booking</span>
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script>
-    // MULTI-ACCOUNT & PASSBOOK STATE
-    let accountsList = [
-      {
-        accountNumber: "1001",
-        accountHolder: "Nikita",
-        balance: 5000.00,
-        atmCardNumber: "4567 8912 3456 1001",
-        atmPin: "1234",
-        passbook: [
-          { date: "08-10-2026", desc: "Account Opening Initial Deposit", deposit: 5000.00, withdraw: 0, balance: 5000.00 }
-        ]
-      }
-    ];
-    let activeIndex = 0;
-
-    function appendTerminal(text) {
-      const term = document.getElementById('terminalOutput');
-      term.textContent += "\n" + text;
-      term.scrollTop = term.scrollHeight;
-    }
-
-    function updateStateUI() {
-      const badge = document.getElementById('accountBadge');
-      const totalBadge = document.getElementById('totalAccountsBadge');
-      totalBadge.textContent = "Total: " + accountsList.length;
-
-      if (activeIndex >= 0 && activeIndex < accountsList.length) {
-        const acc = accountsList[activeIndex];
-        badge.textContent = "Active Account (" + acc.accountNumber + ")";
-        badge.className = "text-xs bg-emerald-100 text-emerald-800 font-extrabold px-3 py-1 rounded-full border border-emerald-300";
-        document.getElementById('stateAccNo').textContent = acc.accountNumber;
-        document.getElementById('stateName').textContent = acc.accountHolder;
-        document.getElementById('stateBalance').textContent = '₹' + acc.balance.toFixed(2);
-        document.getElementById('stateAtmCard').textContent = acc.atmCardNumber;
-
-        // ATM Card Preview
-        document.getElementById('cardNameDisplay').textContent = acc.accountHolder;
-        document.getElementById('cardNumberDisplay').textContent = acc.atmCardNumber;
-        document.getElementById('cardAccNoDisplay').textContent = acc.accountNumber;
-
-        // Passbook Card Header
-        document.getElementById('pbName').textContent = acc.accountHolder;
-        document.getElementById('pbAccNo').textContent = acc.accountNumber;
-        document.getElementById('pbBalance').textContent = '₹' + acc.balance.toFixed(2);
-
-        // Render Passbook Entries Table
-        renderPassbookTable(acc.passbook);
-      } else {
-        badge.textContent = "No Active Account";
-        badge.className = "text-xs bg-slate-100 text-slate-700 font-bold px-3 py-1 rounded-full border border-slate-300";
-        document.getElementById('stateAccNo').textContent = "-";
-        document.getElementById('stateName').textContent = "-";
-        document.getElementById('stateBalance').textContent = "₹0.00";
-        document.getElementById('stateAtmCard').textContent = "-";
-      }
-    }
-
-    function renderPassbookTable(entries) {
-      const tbody = document.getElementById('passbookTableBody');
-      if (!entries || entries.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-slate-400">No transaction records found.</td></tr>`;
-        return;
-      }
-      let html = '';
-      entries.forEach(e => {
-        const depStr = e.deposit > 0 ? `<span class="text-emerald-600 font-bold">+${e.deposit.toFixed(2)}</span>` : '<span class="text-slate-400">-</span>';
-        const withStr = e.withdraw > 0 ? `<span class="text-rose-600 font-bold">-${e.withdraw.toFixed(2)}</span>` : '<span class="text-slate-400">-</span>';
-        html += `
-          <tr>
-            <td class="p-2.5 text-slate-500">${e.date}</td>
-            <td class="p-2.5 font-bold text-slate-900">${e.desc}</td>
-            <td class="p-2.5">${depStr}</td>
-            <td class="p-2.5">${withStr}</td>
-            <td class="p-2.5 text-right font-bold text-slate-900">₹${e.balance.toFixed(2)}</td>
-          </tr>
-        `;
-      });
-      tbody.innerHTML = html;
-    }
-
-    function downloadStatement() {
-      if (activeIndex < 0 || activeIndex >= accountsList.length) {
-        alert("No active account selected!");
-        return;
-      }
-      const acc = accountsList[activeIndex];
-      let content = `=====================================================================================\n`;
-      content += `                        NIKITA BANK OF LONI                                          \n`;
-      content += `                       OFFICIAL ACCOUNT STATEMENT                                    \n`;
-      content += `=====================================================================================\n\n`;
-      content += `Bank Name      : Nikita Bank of Loni\n`;
-      content += `Account Holder : ${acc.accountHolder}\n`;
-      content += `Account Number : ${acc.accountNumber}\n`;
-      content += `ATM Card Number: ${acc.atmCardNumber}\n`;
-      content += `IFSC / Branch  : NBLN0001001 (Loni Branch)\n`;
-      content += `Statement Date : ${new Date().toLocaleDateString()}\n`;
-      content += `Current Balance: ₹${acc.balance.toFixed(2)}\n`;
-      content += `=====================================================================================\n\n`;
-      content += `DATE         PARTICULARS                    DEPOSIT (₹)     WITHDRAWAL (₹)  BALANCE (₹)\n`;
-      content += `-------------------------------------------------------------------------------------\n`;
-      
-      acc.passbook.forEach(e => {
-        const dateStr = e.date.padEnd(12, ' ');
-        const descStr = e.desc.padEnd(30, ' ');
-        const depStr = (e.deposit > 0 ? ('+' + e.deposit.toFixed(2)) : '-').padEnd(16, ' ');
-        const withStr = (e.withdraw > 0 ? ('-' + e.withdraw.toFixed(2)) : '-').padEnd(16, ' ');
-        const balStr = ('₹' + e.balance.toFixed(2));
-        content += `${dateStr}${descStr}${depStr}${withStr}${balStr}\n`;
-      });
-      
-      content += `-------------------------------------------------------------------------------------\n`;
-      content += `                              END OF STATEMENT                                       \n`;
-      content += `=====================================================================================\n`;
-
-      const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Nikita_Bank_Statement_${acc.accountNumber}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-
-    function findAccIndex(accNum) {
-      return accountsList.findIndex(a => a.accountNumber === accNum);
-    }
-
-    function resetSystem() {
-      accountsList = [
-        {
-          accountNumber: "1001",
-          accountHolder: "Nikita",
-          balance: 5000.00,
-          atmCardNumber: "4567 8912 3456 1001",
-          atmPin: "1234",
-          passbook: [
-            { date: "08-10-2026", desc: "Account Opening Initial Deposit", deposit: 5000.00, withdraw: 0, balance: 5000.00 }
-          ]
-        }
-      ];
-      activeIndex = 0;
-      document.getElementById('terminalOutput').textContent = `===== NIKITA BANK OF LONI =====\n1. Create Account\n2. Access Existing Account\n3. Deposit Money\n4. Withdraw Money\n5. Check Balance\n6. Display Account Details\n7. ATM Card\n8. Exit\n\nSystem state reset.`;
-      updateStateUI();
-    }
-
-    // 1. CREATE ACCOUNT
-    function showCreateModal() {
-      document.getElementById('modalTitle').textContent = "1. Create New Bank Account";
-      document.getElementById('modalBody').innerHTML = `
-        <div>
-          <label class="text-base font-bold text-slate-800 block mb-1">Account Number:</label>
-          <input id="inputAccNo" type="text" value="1002" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:outline-none focus:border-blue-600 font-mono">
+    <!-- ===================================================================== -->
+    <!-- MODAL 2: Booking Confirmation Pass Modal                              -->
+    <!-- ===================================================================== -->
+    <div id="pass-modal" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">🎉 Booking Confirmed!</h3>
+                <button type="button" class="modal-close-btn" data-close="pass-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="booking-pass-card">
+                    <div class="pass-header">
+                        <div>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Hostel Laundry Pass</span>
+                            <h4 id="pass-machine-title" style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">Machine 1</h4>
+                        </div>
+                        <div id="pass-ref-code" class="pass-ref-badge">WM1-987654</div>
+                    </div>
+                    <div class="pass-details-grid">
+                        <div class="pass-item">
+                            <label>Student Name</label>
+                            <p id="pass-student-name">Narendra</p>
+                        </div>
+                        <div class="pass-item">
+                            <label>Booking Date</label>
+                            <p id="pass-date">2026-10-19</p>
+                        </div>
+                        <div class="pass-item">
+                            <label>Slot Window (75 Mins)</label>
+                            <p id="pass-slot-time">09:00 AM - 10:15 AM</p>
+                        </div>
+                        <div class="pass-item">
+                            <label>Status</label>
+                            <p><span class="spec-badge" style="background-color: var(--available-light); color: var(--available-color); font-weight: 700;">Confirmed</span></p>
+                        </div>
+                    </div>
+                    <div style="background-color: var(--bg-card); padding: 12px; border-radius: var(--radius-sm); font-size: 0.78rem; color: var(--text-secondary); border: 1px solid var(--border-color);">
+                        🔔 <strong>Hostel Laundry Policy:</strong> Please load your clothes at the exact start time. Be present 5 minutes before the 75-minute cycle finishes to empty the drum for the next student.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="window.print();">Print Pass</button>
+                <button type="button" class="btn btn-primary" data-close="pass-modal">Done</button>
+            </div>
         </div>
-        <div>
-          <label class="text-base font-bold text-slate-800 block mb-1">Account Holder Name:</label>
-          <input id="inputName" type="text" value="Rahul" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:outline-none focus:border-blue-600">
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 3: Washing Modes Photo & Guide Modal                            -->
+    <!-- ===================================================================== -->
+    <div id="modes-modal" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modes-modal-title">Washing Modes & Machine Guide</h3>
+                <button type="button" class="modal-close-btn" data-close="modes-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="border-radius: var(--radius-md); overflow: hidden; max-height: 320px; background-color: #0f172a; text-align: center;">
+                    <img id="modes-modal-img" src="" alt="Washing Mode Guide Diagram" style="width: 100%; height: 100%; object-fit: contain; max-height: 320px;">
+                </div>
+                <div id="modes-instructions-text" style="font-size: 0.9rem; line-height: 1.6; color: var(--text-secondary);">
+                    Loading guide...
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-close="modes-modal">Close</button>
+            </div>
         </div>
-        <div>
-          <label class="text-base font-bold text-slate-800 block mb-1">Initial Balance (₹):</label>
-          <input id="inputBalance" type="number" value="2000.00" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:outline-none focus:border-blue-600 font-mono">
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 4: 4 Machine QR Codes Sheet Modal                               -->
+    <!-- ===================================================================== -->
+    <div id="qr-modal" class="modal-backdrop">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">📱 4 Machine QR Codes (Print & Stick on Machines)</h3>
+                <button type="button" class="modal-close-btn" data-close="qr-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">
+                    Each washing machine has its own unique QR code. When a student scans a machine's QR code with their mobile phone, this booking site opens with that machine automatically selected.
+                </p>
+                <div id="qr-all-cards-container" class="qr-cards-grid">
+                    <!-- Populated by qrService.js -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="window.print();">🖨️ Print QR Sheet</button>
+                <button type="button" class="btn btn-primary" data-close="qr-modal">Close</button>
+            </div>
         </div>
-        <div>
-          <label class="text-base font-bold text-slate-800 block mb-1">4-Digit ATM PIN:</label>
-          <input id="inputPin" type="password" value="5678" maxlength="4" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:outline-none focus:border-blue-600 font-mono">
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 5: Admin Authentication Modal                                   -->
+    <!-- ===================================================================== -->
+    <div id="admin-login-modal" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 440px;">
+            <div class="modal-header">
+                <h3 class="modal-title">🔒 Admin Authentication</h3>
+                <button type="button" class="modal-close-btn" data-close="admin-login-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                    Hostel Wardens and Laundry In-Charge staff can log in to modify machine status, manage bookings, upload mode guides, and download PDF reports.
+                </p>
+                <form id="admin-login-form" onsubmit="return false;">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label">Admin ID / Mobile / Email</label>
+                        <input type="text" id="admin-email-input" class="form-input" placeholder="e.g. 7447642019" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        <label class="form-label">Admin Password</label>
+                        <input type="password" id="admin-password-input" class="form-input" placeholder="Enter password" required autocomplete="current-password">
+                    </div>
+                    <div id="admin-login-error" style="display: none; padding: 10px; background-color: var(--busy-light); border: 1px solid var(--busy-border); border-radius: var(--radius-sm); color: var(--busy-color); font-size: 0.82rem; margin-bottom: 12px;"></div>
+                    <button type="button" id="btn-submit-admin-login" class="btn btn-primary" style="width: 100%;">
+                        <span>Log In as Admin</span>
+                    </button>
+                </form>
+            </div>
         </div>
-      `;
-      const btn = document.getElementById('modalSubmitBtn');
-      btn.textContent = "Create Account";
-      btn.onclick = executeCreateAccount;
-      document.getElementById('inputModal').classList.remove('hidden');
-      document.getElementById('inputModal').classList.add('flex');
-    }
+    </div>
 
-    function executeCreateAccount() {
-      const accNo = document.getElementById('inputAccNo').value.trim();
-      const name = document.getElementById('inputName').value.trim();
-      const initBal = parseFloat(document.getElementById('inputBalance').value);
-      const pin = document.getElementById('inputPin').value.trim();
+    <!-- ===================================================================== -->
+    <!-- MODAL 6: Admin Dashboard (Secure Operations)                          -->
+    <!-- ===================================================================== -->
+    <div id="admin-dashboard-modal" class="modal-backdrop">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span>Hostel Laundry Admin Control Center</span>
+                </h3>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button type="button" id="btn-admin-logout" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">Logout</button>
+                    <button type="button" class="modal-close-btn" data-close="admin-dashboard-modal">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <!-- Admin Navigation Tabs -->
+                <div class="admin-tabs">
+                    <button type="button" class="admin-tab-btn active" data-tab="tab-manage-machines">Machine Status & Photos</button>
+                    <button type="button" class="admin-tab-btn" data-tab="tab-manage-bookings">Manage Bookings</button>
+                    <button type="button" class="admin-tab-btn" data-tab="tab-pdf-reports">Date-Wise PDF Reports</button>
+                </div>
 
-      if (!accNo || !name || isNaN(initBal) || initBal < 0 || !pin) {
-        alert("Please enter valid account details.");
-        return;
-      }
+                <!-- TAB 1: Machine Status & Photo Upload -->
+                <div id="tab-manage-machines" class="admin-tab-content">
+                    <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px;">Control Machine Operational Status & Guide Photos</h4>
+                    <div id="admin-machines-list" style="display: flex; flex-direction: column; gap: 14px;">
+                        <!-- Rendered by script.js -->
+                    </div>
+                </div>
 
-      if (findAccIndex(accNo) !== -1) {
-        appendTerminal(`\nEnter your choice (1-8): 1\n--- CREATE NEW ACCOUNT ---\nEnter Account Number: ${accNo}\n[Error] Account Number Already Exists!`);
-        closeModal();
-        return;
-      }
+                <!-- TAB 2: Bookings Management -->
+                <div id="tab-manage-bookings" class="admin-tab-content" style="display: none;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+                        <input type="date" id="admin-bookings-date-filter" class="form-input" style="flex: 1; min-width: 160px;">
+                        <select id="admin-bookings-machine-filter" class="form-select" style="flex: 1; min-width: 160px;">
+                            <option value="all">All 4 Machines</option>
+                            <option value="1">Machine 1</option>
+                            <option value="2">Machine 2</option>
+                            <option value="3">Machine 3</option>
+                            <option value="4">Machine 4</option>
+                        </select>
+                        <input type="text" id="admin-bookings-search" class="form-input" placeholder="Search student name, roll, phone..." style="flex: 2; min-width: 200px;">
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Ref</th>
+                                    <th>Machine</th>
+                                    <th>Time Slot</th>
+                                    <th>Student Name</th>
+                                    <th>Roll / Room</th>
+                                    <th>Contact No</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-bookings-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-      const cardNum = "4567 8912 3456 " + accNo;
-      const newAcc = {
-        accountNumber: accNo,
-        accountHolder: name,
-        balance: initBal,
-        atmCardNumber: cardNum,
-        atmPin: pin,
-        passbook: [
-          { date: "08-10-2026", desc: "Account Opening Initial Deposit", deposit: initBal, withdraw: 0, balance: initBal }
-        ]
-      };
-
-      accountsList.push(newAcc);
-      activeIndex = accountsList.length - 1;
-
-      appendTerminal(`\nEnter your choice (1-8): 1\n--- CREATE NEW ACCOUNT ---\nEnter Account Number: ${accNo}\nEnter Account Holder Name: ${name}\nEnter Initial Balance: ₹${initBal.toFixed(2)}\nEnter 4-Digit ATM PIN: ****\n\n[Success] Account Created Successfully!\nBank: Nikita Bank of Loni\nAssigned ATM Card Number: ${cardNum}`);
-      updateStateUI();
-      closeModal();
-    }
-
-    // 2. ACCESS EXISTING ACCOUNT
-    function showAccessModal() {
-      document.getElementById('modalTitle').textContent = "2. Access Existing Account";
-      document.getElementById('modalBody').innerHTML = `
-        <div>
-          <label class="text-base font-bold text-slate-800 block mb-2">Enter Account Number:</label>
-          <input id="inputSearchAccNo" type="text" value="1001" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:outline-none focus:border-blue-600 font-mono">
+                <!-- TAB 3: Date-Wise PDF Report Downloader -->
+                <div id="tab-pdf-reports" class="admin-tab-content" style="display: none;">
+                    <div style="background-color: var(--bg-primary); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 14px;">
+                        <h4 style="font-size: 1rem; font-weight: 700;">Generate Official Daily Facility Report (PDF)</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                            Generates a branded audit PDF report containing machine utilization metrics, confirmed vs cancelled counts, full student booking logs, and official sign-off boxes.
+                        </p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                            <div class="form-group">
+                                <label class="form-label">Select Report Date</label>
+                                <input type="date" id="pdf-report-date" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Filter Machine</label>
+                                <select id="pdf-report-machine-filter" class="form-select">
+                                    <option value="all">All 4 Machines</option>
+                                    <option value="1">Machine 1</option>
+                                    <option value="2">Machine 2</option>
+                                    <option value="3">Machine 3</option>
+                                    <option value="4">Machine 4</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" id="btn-download-pdf-report" class="btn btn-primary" style="align-self: flex-start;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>Download PDF Audit Report</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-      `;
-      const btn = document.getElementById('modalSubmitBtn');
-      btn.textContent = "Access Account";
-      btn.onclick = executeAccessAccount;
-      document.getElementById('inputModal').classList.remove('hidden');
-      document.getElementById('inputModal').classList.add('flex');
-    }
+    </div>
 
-    function executeAccessAccount() {
-      const accNo = document.getElementById('inputSearchAccNo').value.trim();
-      closeModal();
-      const idx = findAccIndex(accNo);
-
-      if (idx === -1) {
-        appendTerminal(`\nEnter your choice (1-8): 2\nEnter Account Number: ${accNo}\n[Error] Account Not Found!`);
-        return;
-      }
-
-      activeIndex = idx;
-      const acc = accountsList[idx];
-      appendTerminal(`\nEnter your choice (1-8): 2\nEnter Account Number: ${accNo}\n[Success] Account Loaded Successfully!\nWelcome to Nikita Bank of Loni, ${acc.accountHolder}!\nCurrent Balance: ₹${acc.balance.toFixed(2)}`);
-      updateStateUI();
-    }
-
-    // 3. DEPOSIT MONEY
-    function showDepositModal() {
-      document.getElementById('modalTitle').textContent = "3. Deposit Money";
-      document.getElementById('modalBody').innerHTML = `
-        <div>
-          <label class="text-base font-bold text-slate-800 block mb-2">Account Number:</label>
-          <input id="inputDepAccNo" type="text" value="${activeIndex >= 0 ? accountsList[activeIndex].accountNumber : '1001'}" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:outline-none focus:border-blue-600 font-mono">
+    <!-- ===================================================================== -->
+    <!-- MODAL 7: Supabase Connection Setup Modal                              -->
+    <!-- ===================================================================== -->
+    <div id="setup-modal" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">⚙️ Connect Supabase PostgreSQL Database</h3>
+                <button type="button" class="modal-close-btn" data-close="setup-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                    Enter your Supabase project credentials from <strong>Supabase Dashboard &gt; Project Settings &gt; API</strong>.
+                </p>
+                <div class="form-group">
+                    <label class="form-label">Project URL</label>
+                    <input type="url" id="setup-supabase-url" class="form-input" placeholder="https://xyzcompany.supabase.co">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Anon Public Key</label>
+                    <input type="text" id="setup-supabase-anon-key" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                    <span class="form-help">Safe for browser client-side queries. Never enter service_role key here.</span>
+                </div>
+                <div id="setup-test-result" style="display: none; padding: 10px; border-radius: var(--radius-sm); font-size: 0.85rem;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btn-test-supabase-conn" class="btn btn-secondary">Test Connection</button>
+                <button type="button" id="btn-save-supabase-conn" class="btn btn-primary">Save & Connect</button>
+            </div>
         </div>
-        <div>
-          <label class="text-base font-bold text-slate-800 block mb-2">Enter Amount to Deposit (₹):</label>
-          <input id="inputDeposit" type="number" value="1500.00" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:outline-none focus:border-blue-600 font-mono">
-        </div>
-      `;
-      const btn = document.getElementById('modalSubmitBtn');
-      btn.textContent = "Deposit Funds";
-      btn.onclick = executeDeposit;
-      document.getElementById('inputModal').classList.remove('hidden');
-      document.getElementById('inputModal').classList.add('flex');
-    }
+    </div>
 
-    function executeDeposit() {
-      const accNo = document.getElementById('inputDepAccNo').value.trim();
-      const amt = parseFloat(document.getElementById('inputDeposit').value);
-      closeModal();
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
 
-      const idx = findAccIndex(accNo);
-      if (idx === -1) {
-        appendTerminal(`\nEnter your choice (1-8): 3\nEnter Account Number: ${accNo}\n[Error] Account Not Found!`);
-        return;
-      }
-
-      if (isNaN(amt) || amt <= 0) {
-        appendTerminal(`\nEnter your choice (1-8): 3\nEnter Account Number: ${accNo}\nEnter Amount to Deposit: ₹${amt}\n[Error] Deposit amount must be greater than zero.`);
-        return;
-      }
-
-      accountsList[idx].balance += amt;
-      accountsList[idx].passbook.push({
-        date: "08-10-2026",
-        desc: "Cash Deposit Credit",
-        deposit: amt,
-        withdraw: 0,
-        balance: accountsList[idx].balance
-      });
-
-      activeIndex = idx;
-      appendTerminal(`\nEnter your choice (1-8): 3\nEnter Account Number: ${accNo}\nEnter Amount to Deposit: ₹${amt.toFixed(2)}\n\n[Success] Money Deposited Successfully!\nDeposited Amount: ₹${amt.toFixed(2)}\nUpdated Balance: ₹${accountsList[idx].balance.toFixed(2)}`);
-      updateStateUI();
-    }
-
-    // 4. WITHDRAW MONEY
-    function showWithdrawModal() {
-      document.getElementById('modalTitle').textContent = "4. Withdraw Money (PIN Verified)";
-      document.getElementById('modalBody').innerHTML = `
-        <div>
-          <label class="text-base font-bold text-slate-800 block mb-1">Account Number:</label>
-          <input id="inputWithAccNo" type="text" value="${activeIndex >= 0 ? accountsList[activeIndex].accountNumber : '1001'}" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:outline-none focus:border-blue-600 font-mono">
-        </div>
-        <div>
-          <label class="text-base font-bold text-slate-800 block mb-1">Enter 4-Digit ATM PIN:</label>
-          <input id="inputWithPin" type="password" value="1234" maxlength="4" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:outline-none focus:border-blue-600 font-mono">
-        </div>
-        <div>
-          <label class="text-base font-bold text-slate-800 block mb-1">Enter Amount to Withdraw (₹):</label>
-          <input id="inputWithdraw" type="number" value="2000.00" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:outline-none focus:border-blue-600 font-mono">
-        </div>
-      `;
-      const btn = document.getElementById('modalSubmitBtn');
-      btn.textContent = "Withdraw Funds";
-      btn.onclick = executeWithdraw;
-      document.getElementById('inputModal').classList.remove('hidden');
-      document.getElementById('inputModal').classList.add('flex');
-    }
-
-    function executeWithdraw() {
-      const accNo = document.getElementById('inputWithAccNo').value.trim();
-      const pin = document.getElementById('inputWithPin').value.trim();
-      const amt = parseFloat(document.getElementById('inputWithdraw').value);
-      closeModal();
-
-      const idx = findAccIndex(accNo);
-      if (idx === -1) {
-        appendTerminal(`\nEnter your choice (1-8): 4\nEnter Account Number: ${accNo}\n[Error] Account Not Found!`);
-        return;
-      }
-
-      if (accountsList[idx].atmPin !== pin) {
-        appendTerminal(`\nEnter your choice (1-8): 4\nEnter Account Number: ${accNo}\nEnter ATM PIN: ****\n[Error] Invalid PIN!`);
-        return;
-      }
-
-      if (isNaN(amt) || amt <= 0) {
-        appendTerminal(`\nEnter your choice (1-8): 4\nEnter Account Number: ${accNo}\nEnter ATM PIN: ****\n[Success] PIN Verified Successfully!\nEnter Amount to Withdraw: ₹${amt}\n\n[Exception Caught] Invalid Amount: Withdrawal amount must be greater than zero.`);
-        return;
-      }
-
-      if (amt > accountsList[idx].balance) {
-        appendTerminal(`\nEnter your choice (1-8): 4\nEnter Account Number: ${accNo}\nEnter ATM PIN: ****\n[Success] PIN Verified Successfully!\nEnter Amount to Withdraw: ₹${amt.toFixed(2)}\n\n[Exception Caught] Insufficient Balance!`);
-        return;
-      }
-
-      accountsList[idx].balance -= amt;
-      accountsList[idx].passbook.push({
-        date: "08-10-2026",
-        desc: "ATM Withdrawal Debit",
-        deposit: 0,
-        withdraw: amt,
-        balance: accountsList[idx].balance
-      });
-
-      activeIndex = idx;
-      appendTerminal(`\nEnter your choice (1-8): 4\nEnter Account Number: ${accNo}\nEnter ATM PIN: ****\n[Success] PIN Verified Successfully!\nEnter Amount to Withdraw: ₹${amt.toFixed(2)}\n\n[Success] Withdrawal Successful!\nWithdrawn Amount: ₹${amt.toFixed(2)}\nRemaining Balance: ₹${accountsList[idx].balance.toFixed(2)}`);
-      updateStateUI();
-    }
-
-    // 5. CHECK BALANCE
-    function showCheckBalanceModal() {
-      document.getElementById('modalTitle').textContent = "5. Check Balance";
-      document.getElementById('modalBody').innerHTML = `
-        <div>
-          <label class="text-base font-bold text-slate-800 block mb-2">Enter Account Number:</label>
-          <input id="inputChkAccNo" type="text" value="${activeIndex >= 0 ? accountsList[activeIndex].accountNumber : '1001'}" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:outline-none focus:border-blue-600 font-mono">
-        </div>
-      `;
-      const btn = document.getElementById('modalSubmitBtn');
-      btn.textContent = "Check Balance";
-      btn.onclick = executeCheckBalance;
-      document.getElementById('inputModal').classList.remove('hidden');
-      document.getElementById('inputModal').classList.add('flex');
-    }
-
-    function executeCheckBalance() {
-      const accNo = document.getElementById('inputChkAccNo').value.trim();
-      closeModal();
-
-      const idx = findAccIndex(accNo);
-      if (idx === -1) {
-        appendTerminal(`\nEnter your choice (1-8): 5\nEnter Account Number: ${accNo}\n[Error] Account Not Found!`);
-        return;
-      }
-
-      activeIndex = idx;
-      appendTerminal(`\nEnter your choice (1-8): 5\nEnter Account Number: ${accNo}\nAccount Holder : ${accountsList[idx].accountHolder}\n----------------------------------------\n Current Balance: ₹${accountsList[idx].balance.toFixed(2)}\n----------------------------------------`);
-      updateStateUI();
-    }
-
-    // 6. DISPLAY DETAILS
-    function showDisplayDetailsModal() {
-      document.getElementById('modalTitle').textContent = "6. Display Account Details";
-      document.getElementById('modalBody').innerHTML = `
-        <div>
-          <label class="text-base font-bold text-slate-800 block mb-2">Enter Account Number:</label>
-          <input id="inputDispAccNo" type="text" value="${activeIndex >= 0 ? accountsList[activeIndex].accountNumber : '1001'}" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:outline-none focus:border-blue-600 font-mono">
-        </div>
-      `;
-      const btn = document.getElementById('modalSubmitBtn');
-      btn.textContent = "Display Details";
-      btn.onclick = executeDisplayDetails;
-      document.getElementById('inputModal').classList.remove('hidden');
-      document.getElementById('inputModal').classList.add('flex');
-    }
-
-    function executeDisplayDetails() {
-      const accNo = document.getElementById('inputDispAccNo').value.trim();
-      closeModal();
-
-      const idx = findAccIndex(accNo);
-      if (idx === -1) {
-        appendTerminal(`\nEnter your choice (1-8): 6\nEnter Account Number: ${accNo}\n[Error] Account Not Found!`);
-        return;
-      }
-
-      activeIndex = idx;
-      const acc = accountsList[idx];
-      appendTerminal(`\nEnter your choice (1-8): 6\nEnter Account Number: ${accNo}\n----------------------------------------\n          ACCOUNT DETAILS               \n----------------------------------------\n Bank Name      : Nikita Bank of Loni\n Account Number : ${acc.accountNumber}\n Account Holder : ${acc.accountHolder}\n Current Balance: ₹${acc.balance.toFixed(2)}\n ATM Card Number: ${acc.atmCardNumber}\n ATM Card Status: Active\n----------------------------------------`);
-      updateStateUI();
-    }
-
-    // 7. ATM CARD
-    function showATMCardModal() {
-      document.getElementById('modalTitle').textContent = "7. Display ATM Card";
-      document.getElementById('modalBody').innerHTML = `
-        <div>
-          <label class="text-base font-bold text-slate-800 block mb-1">Enter Account Number:</label>
-          <input id="inputAtmAccNo" type="text" value="${activeIndex >= 0 ? accountsList[activeIndex].accountNumber : '1001'}" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:outline-none focus:border-blue-600 font-mono">
-        </div>
-        <div>
-          <label class="text-base font-bold text-slate-800 block mb-1">Enter 4-Digit ATM PIN:</label>
-          <input id="inputAtmPin" type="password" value="1234" maxlength="4" class="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:outline-none focus:border-blue-600 font-mono">
-        </div>
-      `;
-      const btn = document.getElementById('modalSubmitBtn');
-      btn.textContent = "View ATM Card";
-      btn.onclick = executeATMCard;
-      document.getElementById('inputModal').classList.remove('hidden');
-      document.getElementById('inputModal').classList.add('flex');
-    }
-
-    function executeATMCard() {
-      const accNo = document.getElementById('inputAtmAccNo').value.trim();
-      const pin = document.getElementById('inputAtmPin').value.trim();
-      closeModal();
-
-      const idx = findAccIndex(accNo);
-      if (idx === -1) {
-        appendTerminal(`\nEnter your choice (1-8): 7\nEnter Account Number: ${accNo}\n[Error] Account Not Found!`);
-        return;
-      }
-
-      if (accountsList[idx].atmPin !== pin) {
-        appendTerminal(`\nEnter your choice (1-8): 7\nEnter Account Number: ${accNo}\nEnter ATM PIN: ****\n[Error] Invalid PIN!`);
-        return;
-      }
-
-      activeIndex = idx;
-      const acc = accountsList[idx];
-      appendTerminal(`\nEnter your choice (1-8): 7\nEnter Account Number: ${accNo}\nEnter ATM PIN: ****\n[Success] PIN Verified Successfully!\n----------------------------------------\n             DEMO ATM CARD              \n----------------------------------------\n NIKITA BANK OF LONI                    \n                                        \n Card Holder : ${acc.accountHolder}\n Card Number : ${acc.atmCardNumber}\n Account No  : ${acc.accountNumber}\n Valid Thru  : 12/30                    \n Status      : ACTIVE                   \n----------------------------------------`);
-      updateStateUI();
-    }
-
-    function exitAction() {
-      appendTerminal(`\nEnter your choice (1-8): 8\nThank you for using Nikita Bank of Loni. Goodbye!`);
-    }
-
-    function closeModal() {
-      document.getElementById('inputModal').classList.add('hidden');
-      document.getElementById('inputModal').classList.remove('flex');
-    }
-
-    // Initialize UI on load
-    updateStateUI();
-  </script>
+    <!-- Application Controller Scripts -->
+    <script src="js/config.js?v=3.3"></script>
+    <script src="js/supabaseClient.js?v=3.3"></script>
+    <script src="js/bookingService.js?v=3.3"></script>
+    <script src="js/adminService.js?v=3.3"></script>
+    <script src="js/qrService.js?v=3.3"></script>
+    <script src="script.js?v=3.3"></script>
 </body>
 </html>
