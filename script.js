@@ -38,6 +38,7 @@
         elements.btnAdminAuth = document.getElementById('btn-admin-auth');
         elements.adminBtnText = document.getElementById('admin-btn-text');
         elements.datePillsBar = document.getElementById('date-pills-bar');
+        elements.bookingCalendarInput = document.getElementById('booking-calendar-input');
         elements.machinesContainer = document.getElementById('machines-container');
         elements.kpiAvailable = document.getElementById('kpi-available-count');
         elements.kpiInUse = document.getElementById('kpi-inuse-count');
@@ -204,6 +205,57 @@
         state.selectedDateStr = dateRange[0].dateStr;
         state.selectedDateObj = dateRange[0].dateObj;
 
+        if (elements.bookingCalendarInput) {
+            elements.bookingCalendarInput.value = state.selectedDateStr;
+            elements.bookingCalendarInput.min = dateRange[0].dateStr;
+            const maxDateObj = new Date();
+            maxDateObj.setDate(maxDateObj.getDate() + 30);
+            elements.bookingCalendarInput.max = maxDateObj.toISOString().split('T')[0];
+
+            elements.bookingCalendarInput.addEventListener('change', (e) => {
+                const selected = e.target.value;
+                if (!selected) return;
+
+                state.selectedDateStr = selected;
+                state.selectedDateObj = new Date(`${selected}T00:00:00`);
+
+                let matched = false;
+                document.querySelectorAll('.date-pill').forEach(p => {
+                    if (p.dataset.date === selected) {
+                        p.classList.add('active');
+                        matched = true;
+                        p.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                    } else {
+                        p.classList.remove('active');
+                    }
+                });
+
+                if (!matched) {
+                    const dObj = new Date(`${selected}T00:00:00`);
+                    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const customPill = document.createElement('div');
+                    customPill.className = 'date-pill active';
+                    customPill.dataset.date = selected;
+                    customPill.innerHTML = `
+                        <span class="pill-weekday">${weekdays[dObj.getDay()]}</span>
+                        <span class="pill-daynum">${dObj.getDate()} ${months[dObj.getMonth()]}</span>
+                    `;
+                    customPill.addEventListener('click', () => {
+                        document.querySelectorAll('.date-pill').forEach(p => p.classList.remove('active'));
+                        customPill.classList.add('active');
+                        state.selectedDateStr = selected;
+                        if (elements.bookingCalendarInput) elements.bookingCalendarInput.value = selected;
+                        renderMachineCards();
+                    });
+                    elements.datePillsBar.appendChild(customPill);
+                    customPill.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                }
+
+                renderMachineCards();
+            });
+        }
+
         dateRange.forEach((item, index) => {
             const pill = document.createElement('div');
             pill.className = `date-pill ${index === 0 ? 'active' : ''}`;
@@ -219,6 +271,9 @@
                 pill.classList.add('active');
                 state.selectedDateStr = item.dateStr;
                 state.selectedDateObj = item.dateObj;
+                if (elements.bookingCalendarInput) {
+                    elements.bookingCalendarInput.value = item.dateStr;
+                }
                 renderMachineCards();
             });
 
@@ -273,6 +328,9 @@
 
             const photoUrl = machine.photo_url || 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=800&q=80';
 
+            const isFutureScheduled = machine.active_from_date && state.selectedDateStr < machine.active_from_date;
+            const isCardDisabled = machine.status === 'offline' || machine.status === 'maintenance' || isFutureScheduled;
+
             const statusBadgeMap = {
                 available: '<span class="machine-badge-overlay badge-available">● Available</span>',
                 in_use: '<span class="machine-badge-overlay badge-in_use">● In Use (75m Cycle)</span>',
@@ -280,10 +338,14 @@
                 offline: '<span class="machine-badge-overlay badge-offline">○ Offline</span>'
             };
 
+            const currentBadge = isFutureScheduled
+                ? `<span class="machine-badge-overlay badge-offline">📅 Starts on ${machine.active_from_date}</span>`
+                : (statusBadgeMap[machine.status] || statusBadgeMap.available);
+
             card.innerHTML = `
                 <div class="machine-photo-wrapper">
                     <img class="machine-photo-img" src="${photoUrl}" alt="${machine.name}" loading="lazy">
-                    ${statusBadgeMap[machine.status] || statusBadgeMap.available}
+                    ${currentBadge}
                     <button class="machine-qr-trigger" title="Machine ${machine.id} QR Code" data-qr-machine="${machine.id}">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="3" width="7" height="7"></rect>
@@ -335,8 +397,8 @@
                         <button class="btn btn-secondary btn-modes-guide" data-machine-id="${machine.id}">
                             <span>Washing Modes</span>
                         </button>
-                        <button class="btn btn-primary btn-book-slot" data-machine-id="${machine.id}" ${machine.status === 'offline' || machine.status === 'maintenance' ? 'disabled' : ''}>
-                            <span>Book 75-Min Slot</span>
+                        <button class="btn btn-primary btn-book-slot" data-machine-id="${machine.id}" ${isCardDisabled ? 'disabled' : ''}>
+                            <span>${isFutureScheduled ? `Starts ${machine.active_from_date}` : 'Book 75-Min Slot'}</span>
                         </button>
                     </div>
                 </div>
@@ -718,22 +780,33 @@
             row.className = 'kpi-card';
             row.style.display = 'flex';
             row.style.flexDirection = 'column';
-            row.style.gap = '10px';
+            row.style.gap = '12px';
 
             row.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 10px;">
                     <div>
                         <strong style="font-size: 1rem;">${machine.name}</strong>
                         <p style="font-size: 0.8rem; color: var(--text-muted);">${machine.model} (${machine.capacity_kg} Kg)</p>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <label style="font-size: 0.82rem; font-weight: 600;">Status:</label>
-                        <select class="form-select admin-status-select" data-machine-id="${machine.id}" style="width: 140px; padding: 6px 10px;">
-                            <option value="available" ${machine.status === 'available' ? 'selected' : ''}>Available</option>
-                            <option value="in_use" ${machine.status === 'in_use' ? 'selected' : ''}>In Use</option>
-                            <option value="maintenance" ${machine.status === 'maintenance' ? 'selected' : ''}>Maintenance</option>
-                            <option value="offline" ${machine.status === 'offline' ? 'selected' : ''}>Offline</option>
-                        </select>
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <label style="font-size: 0.82rem; font-weight: 600;">Status:</label>
+                            <select class="form-select admin-status-select" data-machine-id="${machine.id}" style="width: 135px; padding: 6px 10px; font-weight: 600;">
+                                <option value="available" ${machine.status === 'available' ? 'selected' : ''}>Available</option>
+                                <option value="in_use" ${machine.status === 'in_use' ? 'selected' : ''}>In Use</option>
+                                <option value="maintenance" ${machine.status === 'maintenance' ? 'selected' : ''}>Maintenance</option>
+                                <option value="offline" ${machine.status === 'offline' ? 'selected' : ''}>Offline</option>
+                            </select>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <label style="font-size: 0.82rem; font-weight: 600;" title="Date from which this machine is turned ON / operational">📅 Start Date:</label>
+                            <input type="date" class="form-input admin-active-date-input" data-machine-id="${machine.id}" value="${machine.active_from_date || ''}" style="width: 140px; padding: 5px 8px; font-weight: 600;" title="Select date when machine is operational">
+                        </div>
+
+                        <button type="button" class="btn btn-primary btn-save-machine" data-machine-id="${machine.id}" style="padding: 6px 12px; font-size: 0.8rem;">
+                            <span>Save</span>
+                        </button>
                     </div>
                 </div>
 
@@ -752,18 +825,43 @@
             elements.adminMachinesList.appendChild(row);
         });
 
-        // Status change handlers
+        // Save machine status & operational date
+        const handleMachineSave = async (machineId) => {
+            const statusSelect = document.querySelector(`.admin-status-select[data-machine-id="${machineId}"]`);
+            const dateInput = document.querySelector(`.admin-active-date-input[data-machine-id="${machineId}"]`);
+            const newStatus = statusSelect ? statusSelect.value : 'available';
+            const activeDate = dateInput ? dateInput.value : null;
+
+            try {
+                await window.AdminService.updateMachineStatus(machineId, newStatus, activeDate);
+                showToast(`✓ Machine ${machineId} settings saved successfully!`, 'success');
+                await reloadMachines();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        };
+
+        // Attach listeners to save buttons
+        document.querySelectorAll('.btn-save-machine').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const machineId = Number(btn.dataset.machineId);
+                handleMachineSave(machineId);
+            });
+        });
+
+        // Auto-save on dropdown change
         document.querySelectorAll('.admin-status-select').forEach(sel => {
-            sel.addEventListener('change', async () => {
+            sel.addEventListener('change', () => {
                 const machineId = Number(sel.dataset.machineId);
-                const newStatus = sel.value;
-                try {
-                    await window.AdminService.updateMachineStatus(machineId, newStatus);
-                    showToast(`Machine ${machineId} status updated to ${newStatus}.`, 'success');
-                    reloadMachines();
-                } catch (err) {
-                    showToast(err.message, 'error');
-                }
+                handleMachineSave(machineId);
+            });
+        });
+
+        // Auto-save on operational date change
+        document.querySelectorAll('.admin-active-date-input').forEach(input => {
+            input.addEventListener('change', () => {
+                const machineId = Number(input.dataset.machineId);
+                handleMachineSave(machineId);
             });
         });
 
@@ -775,10 +873,10 @@
 
                 const machineId = Number(input.dataset.machineId);
                 try {
-                    showToast('Uploading mode photo to Supabase Storage...', 'info');
+                    showToast('Uploading mode photo...', 'info');
                     const publicUrl = await window.AdminService.uploadWashingModePhoto(machineId, file);
-                    showToast('Mode photo uploaded and updated!', 'success');
-                    reloadMachines();
+                    showToast('Mode photo uploaded and saved successfully!', 'success');
+                    await reloadMachines();
                     renderAdminMachineControls();
                 } catch (err) {
                     showToast(err.message, 'error');

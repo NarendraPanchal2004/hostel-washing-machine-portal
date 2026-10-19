@@ -20,6 +20,7 @@ const BookingService = (function () {
             model: 'LG Commercial AI Direct Drive 9.0 Kg',
             capacity_kg: 9.0,
             status: 'available',
+            active_from_date: null,
             location: 'Laundry Hall (Ground Floor, Bay 1)',
             photo_url: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=800&q=80',
             instructions: 'Heavy 9 Kg Load. Best for bedsheets, jeans, and daily laundry. Quick: 15m, Normal: 45m, Heavy: 75m.'
@@ -30,6 +31,7 @@ const BookingService = (function () {
             model: 'Samsung Inverter Eco Drum 9.0 Kg',
             capacity_kg: 9.0,
             status: 'available',
+            active_from_date: null,
             location: 'Laundry Hall (Ground Floor, Bay 2)',
             photo_url: 'https://images.unsplash.com/photo-1604335399105-a0c585fd81a1?auto=format&fit=crop&w=800&q=80',
             instructions: 'Heavy 9 Kg Load. High-efficiency wash with tangle-free drum. Great for sportswear and bulk wash.'
@@ -40,6 +42,7 @@ const BookingService = (function () {
             model: 'Bosch Serie 6 VarioDrum 9.0 Kg',
             capacity_kg: 9.0,
             status: 'available',
+            active_from_date: null,
             location: 'Laundry Hall (Ground Floor, Bay 3)',
             photo_url: 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?auto=format&fit=crop&w=800&q=80',
             instructions: 'Heavy 9 Kg Load. Ultra-quiet brushless motor with anti-vibration walls for quiet evening washes.'
@@ -50,6 +53,7 @@ const BookingService = (function () {
             model: 'IFB Senator Heavy Steam Pro 9.0 Kg',
             capacity_kg: 9.0,
             status: 'available',
+            active_from_date: null,
             location: 'Laundry Hall (Ground Floor, Bay 4)',
             photo_url: 'https://images.unsplash.com/photo-1545173168-9f1947eebb7f?auto=format&fit=crop&w=800&q=80',
             instructions: 'Heavy 9 Kg Load. Steam allergy care. Perfect for winter blankets, heavy curtains, and hoodies.'
@@ -148,9 +152,10 @@ const BookingService = (function () {
      * Fetch all 4 machines from Supabase (or fallback defaults)
      */
     async function getMachines() {
+        const fallback = getFallbackMachines();
         const client = window.SupabaseManager.getClient();
         if (!client) {
-            return getFallbackMachines();
+            return fallback;
         }
 
         try {
@@ -160,14 +165,17 @@ const BookingService = (function () {
                 .order('id', { ascending: true });
 
             if (error || !data || data.length === 0) {
-                console.warn('Machines query failed or empty, using defaults:', error);
-                return getFallbackMachines();
+                return fallback;
             }
 
-            return data;
+            // Merge remote machines with local overrides if any
+            return data.map(rm => {
+                const fb = fallback.find(f => Number(f.id) === Number(rm.id));
+                return fb ? { ...rm, ...fb } : rm;
+            });
         } catch (e) {
             console.error('getMachines error:', e);
-            return getFallbackMachines();
+            return fallback;
         }
     }
 
@@ -210,6 +218,12 @@ const BookingService = (function () {
             bookings = getLocalBookings(machineId, dateStr);
         }
 
+        // Check machine active status for date
+        const fallbackMachines = getFallbackMachines();
+        const machineInfo = fallbackMachines.find(m => Number(m.id) === Number(machineId));
+        const isNotYetActive = machineInfo && machineInfo.active_from_date && dateStr < machineInfo.active_from_date;
+        const isHardOffline = machineInfo && (machineInfo.status === 'maintenance' || machineInfo.status === 'offline');
+
         // Map over standard slots to determine availability
         const enrichedSlots = standardSlots.map(slot => {
             const slotStartMs = new Date(slot.startISO).getTime();
@@ -225,7 +239,11 @@ const BookingService = (function () {
             });
 
             let status = 'available';
-            if (matchedBooking) {
+            if (isNotYetActive) {
+                status = 'offline';
+            } else if (isHardOffline) {
+                status = machineInfo.status;
+            } else if (matchedBooking) {
                 status = 'booked';
             } else if (slot.isPast) {
                 status = 'past';
@@ -272,14 +290,24 @@ const BookingService = (function () {
         today.setHours(0, 0, 0, 0);
         const bookingDate = new Date(`${dateStr}T00:00:00`);
         const maxDate = new Date(today);
-        maxDate.setDate(today.getDate() + 6);
+        maxDate.setDate(today.getDate() + 30);
 
         if (bookingDate < today) {
             throw new Error('You cannot book slots for past dates.');
         }
 
         if (bookingDate > maxDate) {
-            throw new Error('Bookings are restricted to today and the next 6 days.');
+            throw new Error('Bookings are restricted to the next 30 days.');
+        }
+
+        // 3. Check machine operational status and schedule
+        const fallbackMachines = getFallbackMachines();
+        const machineInfo = fallbackMachines.find(m => Number(m.id) === Number(machineId));
+        if (machineInfo && machineInfo.active_from_date && dateStr < machineInfo.active_from_date) {
+            throw new Error(`Machine ${machineId} is not operational on ${dateStr}. Scheduled to start on ${machineInfo.active_from_date}.`);
+        }
+        if (machineInfo && (machineInfo.status === 'maintenance' || machineInfo.status === 'offline')) {
+            throw new Error(`Machine ${machineId} is currently ${machineInfo.status.toUpperCase()}. Bookings are disabled.`);
         }
 
         // 3. Remote Booking via Supabase

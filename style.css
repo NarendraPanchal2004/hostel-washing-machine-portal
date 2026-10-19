@@ -382,12 +382,50 @@ body {
     font-size: 0.85rem;
     font-weight: 700;
     color: var(--text-secondary);
-    margin-bottom: 10px;
     display: flex;
     align-items: center;
     gap: 6px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+}
+
+.calendar-picker-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-primary);
+    padding: 4px 10px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.calendar-picker-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 0;
+    cursor: pointer;
+}
+
+.calendar-date-input {
+    padding: 4px 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: inherit;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--primary-color);
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    cursor: pointer;
+    outline: none;
+    transition: var(--transition);
+}
+
+.calendar-date-input:focus {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
 
 .date-pills-container {

@@ -128,11 +128,18 @@ const AdminService = (function () {
         notifyAuthListeners();
     }
 
+    const DEFAULT_ADMIN_MACHINES = [
+        { id: 1, name: 'Machine 1 (Bay 1)', model: 'LG Commercial AI Direct Drive 9.0 Kg', capacity_kg: 9.0, status: 'available', active_from_date: null },
+        { id: 2, name: 'Machine 2 (Bay 2)', model: 'Samsung Inverter Eco Drum 9.0 Kg', capacity_kg: 9.0, status: 'available', active_from_date: null },
+        { id: 3, name: 'Machine 3 (Bay 3)', model: 'Bosch Serie 6 VarioDrum 9.0 Kg', capacity_kg: 9.0, status: 'available', active_from_date: null },
+        { id: 4, name: 'Machine 4 (Bay 4)', model: 'IFB Senator Heavy Steam Pro 9.0 Kg', capacity_kg: 9.0, status: 'available', active_from_date: null }
+    ];
+
     /**
-     * Change Machine Status
+     * Change Machine Status and Scheduled Operational Date
      * Allowed statuses: 'available', 'in_use', 'maintenance', 'offline'
      */
-    async function updateMachineStatus(machineId, newStatus) {
+    async function updateMachineStatus(machineId, newStatus, activeFromDate = undefined) {
         if (!isAuthenticated()) {
             throw new Error('UNAUTHORIZED: Only authenticated admins can modify machine status.');
         }
@@ -142,28 +149,60 @@ const AdminService = (function () {
             throw new Error(`Invalid status: ${newStatus}`);
         }
 
-        const client = window.SupabaseManager.getClient();
-        if (!client) throw new Error('Database connection not established.');
-
-        const { data, error } = await client
-            .from('machines')
-            .update({
-                status: newStatus,
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', machineId)
-            .select();
-
-        if (error) {
-            console.error('Update machine status error:', error);
-            throw new Error(error.message || 'Failed to update machine status.');
+        // 1. Always update and persist to Local Storage immediately
+        try {
+            let machines = DEFAULT_ADMIN_MACHINES;
+            const saved = localStorage.getItem('HOSTELWASH_LOCAL_MACHINES');
+            if (saved) {
+                try { machines = JSON.parse(saved); } catch (e) {}
+            }
+            const idx = machines.findIndex(m => Number(m.id) === Number(machineId));
+            if (idx !== -1) {
+                machines[idx].status = newStatus;
+                if (activeFromDate !== undefined) {
+                    machines[idx].active_from_date = activeFromDate || null;
+                }
+                machines[idx].updated_at = new Date().toISOString();
+            } else {
+                machines.push({
+                    id: Number(machineId),
+                    name: `Machine ${machineId}`,
+                    status: newStatus,
+                    active_from_date: activeFromDate || null,
+                    updated_at: new Date().toISOString()
+                });
+            }
+            localStorage.setItem('HOSTELWASH_LOCAL_MACHINES', JSON.stringify(machines));
+        } catch (e) {
+            console.warn('LocalStorage machine update failed:', e);
         }
 
-        return data;
+        // 2. If Supabase client is connected, also update remote database
+        const client = window.SupabaseManager.getClient();
+        if (client) {
+            try {
+                const updatePayload = {
+                    status: newStatus,
+                    updated_at: new Date().toISOString()
+                };
+                if (activeFromDate !== undefined) {
+                    updatePayload.active_from_date = activeFromDate || null;
+                }
+
+                await client
+                    .from('machines')
+                    .update(updatePayload)
+                    .eq('id', machineId);
+            } catch (err) {
+                console.warn('Supabase remote machine status update error:', err);
+            }
+        }
+
+        return { success: true, machineId, status: newStatus, activeFromDate };
     }
 
     /**
-     * Upload Washing Mode Guide Photo to Supabase Storage
+     * Upload Washing Mode Guide Photo to Supabase Storage or Local Persistent Store
      * Bucket: 'machine-guides'
      */
     async function uploadWashingModePhoto(machineId, file) {
@@ -184,45 +223,64 @@ const AdminService = (function () {
             throw new Error('Photo size exceeds 5MB limit.');
         }
 
+        let publicUrl = '';
         const client = window.SupabaseManager.getClient();
-        if (!client) throw new Error('Database connection not established.');
 
-        const fileExt = file.name.split('.').pop() || 'jpg';
-        const filePath = `machine_${machineId}_guide_${Date.now()}.${fileExt}`;
+        if (client) {
+            try {
+                const fileExt = file.name.split('.').pop() || 'jpg';
+                const filePath = `machine_${machineId}_guide_${Date.now()}.${fileExt}`;
 
-        // 1. Upload to Storage bucket
-        const { error: uploadError } = await client.storage
-            .from('machine-guides')
-            .upload(filePath, file, {
-                cacheControl: '3600',
-                upsert: true
+                // Upload to Storage bucket
+                const { error: uploadError } = await client.storage
+                    .from('machine-guides')
+                    .upload(filePath, file, {
+                        cacheControl: '3600',
+                        upsert: true
+                    });
+
+                if (!uploadError) {
+                    const { data: urlData } = client.storage
+                        .from('machine-guides')
+                        .getPublicUrl(filePath);
+                    publicUrl = urlData.publicUrl;
+
+                    await client
+                        .from('machines')
+                        .update({
+                            photo_url: publicUrl,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', machineId);
+                }
+            } catch (err) {
+                console.warn('Remote photo upload error, falling back to local:', err);
+            }
+        }
+
+        // If not connected to Supabase or upload failed, convert to base64 Data URL
+        if (!publicUrl) {
+            publicUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
             });
-
-        if (uploadError) {
-            console.error('Storage upload error:', uploadError);
-            throw new Error(uploadError.message || 'Failed to upload photo to storage.');
         }
 
-        // 2. Retrieve Public URL
-        const { data: urlData } = client.storage
-            .from('machine-guides')
-            .getPublicUrl(filePath);
-
-        const publicUrl = urlData.publicUrl;
-
-        // 3. Update photo_url in machines table
-        const { error: updateError } = await client
-            .from('machines')
-            .update({
-                photo_url: publicUrl,
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', machineId);
-
-        if (updateError) {
-            console.error('Failed to link photo to machine record:', updateError);
-            throw new Error(updateError.message || 'Failed to link photo to machine.');
-        }
+        // Save in LocalStorage machines
+        try {
+            let machines = DEFAULT_ADMIN_MACHINES;
+            const saved = localStorage.getItem('HOSTELWASH_LOCAL_MACHINES');
+            if (saved) {
+                try { machines = JSON.parse(saved); } catch (e) {}
+            }
+            const idx = machines.findIndex(m => Number(m.id) === Number(machineId));
+            if (idx !== -1) {
+                machines[idx].photo_url = publicUrl;
+                localStorage.setItem('HOSTELWASH_LOCAL_MACHINES', JSON.stringify(machines));
+            }
+        } catch (e) {}
 
         return publicUrl;
     }
@@ -237,46 +295,68 @@ const AdminService = (function () {
         }
 
         const client = window.SupabaseManager.getClient();
-        if (!client) return [];
+        let results = [];
 
-        let query = client
-            .from('bookings')
-            .select(`
-                id,
-                machine_id,
-                student_name,
-                student_roll,
-                student_phone,
-                student_email,
-                booking_date,
-                start_time,
-                end_time,
-                status,
-                reference_code,
-                notes,
-                created_at,
-                machines ( id, name, model )
-            `)
-            .order('start_time', { ascending: false });
+        if (client) {
+            try {
+                let query = client
+                    .from('bookings')
+                    .select(`
+                        id,
+                        machine_id,
+                        student_name,
+                        student_roll,
+                        student_phone,
+                        student_email,
+                        booking_date,
+                        start_time,
+                        end_time,
+                        status,
+                        reference_code,
+                        notes,
+                        created_at,
+                        machines ( id, name, model )
+                    `)
+                    .order('start_time', { ascending: false });
 
-        if (dateFilter) {
-            query = query.eq('booking_date', dateFilter);
+                if (dateFilter) {
+                    query = query.eq('booking_date', dateFilter);
+                }
+
+                if (machineFilter && machineFilter !== 'all') {
+                    query = query.eq('machine_id', Number(machineFilter));
+                }
+
+                const { data, error } = await query;
+                if (!error && Array.isArray(data)) {
+                    results = data;
+                }
+            } catch (err) {
+                console.warn('Supabase getAllBookings error, checking local store:', err);
+            }
         }
 
-        if (machineFilter && machineFilter !== 'all') {
-            query = query.eq('machine_id', Number(machineFilter));
-        }
+        // Fallback / merge with local bookings
+        try {
+            const local = localStorage.getItem('HOSTELWASH_LOCAL_BOOKINGS');
+            if (local) {
+                let localBookings = JSON.parse(local);
+                if (dateFilter) {
+                    localBookings = localBookings.filter(b => b.booking_date === dateFilter);
+                }
+                if (machineFilter && machineFilter !== 'all') {
+                    localBookings = localBookings.filter(b => Number(b.machine_id) === Number(machineFilter));
+                }
+                // Append local bookings that aren't already in results
+                localBookings.forEach(lb => {
+                    if (!results.some(r => r.id === lb.id || r.reference_code === lb.reference_code)) {
+                        results.push(lb);
+                    }
+                });
+            }
+        } catch (e) {}
 
-        const { data, error } = await query;
-
-        if (error) {
-            console.error('Admin getAllBookings error:', error);
-            throw new Error(error.message || 'Failed to retrieve bookings.');
-        }
-
-        let results = data || [];
-
-        // Apply client-side search across name, roll, phone, or ref code
+        // Apply search filter if present
         if (searchStr && searchStr.trim()) {
             const q = searchStr.trim().toLowerCase();
             results = results.filter(b => 
@@ -298,17 +378,29 @@ const AdminService = (function () {
             throw new Error('UNAUTHORIZED: Only authenticated admins can cancel bookings.');
         }
 
+        // Always update local storage
+        try {
+            const saved = localStorage.getItem('HOSTELWASH_LOCAL_BOOKINGS');
+            if (saved) {
+                const list = JSON.parse(saved);
+                const b = list.find(item => item.id == bookingId || item.reference_code == bookingId);
+                if (b) {
+                    b.status = 'cancelled';
+                    localStorage.setItem('HOSTELWASH_LOCAL_BOOKINGS', JSON.stringify(list));
+                }
+            }
+        } catch (e) {}
+
         const client = window.SupabaseManager.getClient();
-        if (!client) throw new Error('Database connection not established.');
-
-        const { error } = await client
-            .from('bookings')
-            .update({ status: 'cancelled' })
-            .eq('id', bookingId);
-
-        if (error) {
-            console.error('Cancel booking error:', error);
-            throw new Error(error.message || 'Failed to cancel booking.');
+        if (client) {
+            try {
+                await client
+                    .from('bookings')
+                    .update({ status: 'cancelled' })
+                    .eq('id', bookingId);
+            } catch (err) {
+                console.warn('Supabase remote cancelBooking error:', err);
+            }
         }
 
         return true;
