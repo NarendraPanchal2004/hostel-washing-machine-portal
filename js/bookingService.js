@@ -567,26 +567,17 @@ const BookingService = (function () {
     async function getMachineActiveCycle(machineId) {
         const client = window.SupabaseManager.getClient();
         const now = new Date();
-        const nowISO = now.toISOString();
-
         let activeBooking = null;
 
         if (client) {
             try {
-                const { data, error } = await client
-                    .from('bookings')
-                    .select('id, machine_id, start_time, end_time, status')
-                    .eq('machine_id', machineId)
-                    .neq('status', 'cancelled')
-                    .lte('start_time', nowISO)
-                    .gte('end_time', nowISO)
-                    .maybeSingle();
-
-                if (!error && data) {
-                    activeBooking = data;
+                // Secure RPC: returns active cycles without exposing student PII
+                const { data, error } = await client.rpc('get_public_active_cycles');
+                if (!error && Array.isArray(data)) {
+                    activeBooking = data.find(b => b.machine_id === parseInt(machineId, 10));
                 }
             } catch (e) {
-                console.warn('Active cycle query failed:', e);
+                console.warn('Active cycle RPC query failed:', e);
             }
         }
 
@@ -649,17 +640,12 @@ const BookingService = (function () {
     async function getAllActiveCycles() {
         const client = window.SupabaseManager.getClient();
         const now = new Date();
-        const nowISO = now.toISOString();
         const activeCycles = { 1: { isActive: false }, 2: { isActive: false }, 3: { isActive: false }, 4: { isActive: false } };
 
         if (client) {
             try {
-                const { data, error } = await client
-                    .from('bookings')
-                    .select('id, machine_id, start_time, end_time, status')
-                    .neq('status', 'cancelled')
-                    .lte('start_time', nowISO)
-                    .gte('end_time', nowISO);
+                // Secure RPC: returns active cycles without exposing student PII
+                const { data, error } = await client.rpc('get_public_active_cycles');
 
                 if (!error && Array.isArray(data)) {
                     data.forEach(b => {
@@ -673,7 +659,9 @@ const BookingService = (function () {
                         };
                     });
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.warn('getAllActiveCycles RPC failed:', e);
+            }
         }
         return activeCycles;
     }

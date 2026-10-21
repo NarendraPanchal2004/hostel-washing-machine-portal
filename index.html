@@ -443,6 +443,7 @@
                     <button type="button" class="admin-tab-btn" data-tab="tab-manage-bookings">Manage Bookings</button>
                     <button type="button" class="admin-tab-btn" data-tab="tab-notice-board">📢 Notice Board (Notepad)</button>
                     <button type="button" class="admin-tab-btn" data-tab="tab-pdf-reports">Date-Wise PDF Reports</button>
+                    <button type="button" class="admin-tab-btn" data-tab="tab-audit-logs">🛡️ Audit Logs</button>
                 </div>
 
                 <!-- TAB 1: Machine Status & Photo Upload -->
@@ -587,6 +588,42 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: Security Audit Trail -->
+                <div id="tab-audit-logs" class="admin-tab-content" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 2px;">🛡️ Tamper-Evident Security Audit Trail</h4>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0;">
+                                Immutable log of all administrative actions, machine updates, notices, and booking events.
+                            </p>
+                        </div>
+                        <button type="button" id="btn-refresh-audit-logs" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">
+                            🔄 Refresh Logs
+                        </button>
+                    </div>
+
+                    <div style="overflow-x: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md); max-height: 400px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left;">
+                            <thead style="background-color: var(--bg-primary); position: sticky; top: 0; z-index: 1;">
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <th style="padding: 10px 12px;">Timestamp</th>
+                                    <th style="padding: 10px 12px;">Action</th>
+                                    <th style="padding: 10px 12px;">Target</th>
+                                    <th style="padding: 10px 12px;">Performer</th>
+                                    <th style="padding: 10px 12px;">Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-audit-logs-tbody">
+                                <tr>
+                                    <td colspan="5" style="padding: 20px; text-align: center; color: var(--text-muted);">
+                                        Click to load audit logs...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

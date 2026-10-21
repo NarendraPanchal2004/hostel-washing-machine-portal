@@ -82,6 +82,8 @@
         elements.btnDownloadPdfReport = document.getElementById('btn-download-pdf-report');
         elements.pdfReportDate = document.getElementById('pdf-report-date');
         elements.pdfReportMachineFilter = document.getElementById('pdf-report-machine-filter');
+        elements.adminAuditLogsTbody = document.getElementById('admin-audit-logs-tbody');
+        elements.btnRefreshAuditLogs = document.getElementById('btn-refresh-audit-logs');
 
         // Setup Modal Fields
         elements.setupSupabaseUrl = document.getElementById('setup-supabase-url');
@@ -899,9 +901,15 @@
                     loadAdminBookings();
                 } else if (tabBtn.dataset.tab === 'tab-notice-board') {
                     renderNoticeBoard();
+                } else if (tabBtn.dataset.tab === 'tab-audit-logs') {
+                    loadAuditLogs();
                 }
             });
         });
+
+        if (elements.btnRefreshAuditLogs) {
+            elements.btnRefreshAuditLogs.addEventListener('click', loadAuditLogs);
+        }
 
         // Admin Bookings Filters
         elements.adminBookingsDateFilter.value = state.selectedDateStr;
@@ -1141,6 +1149,48 @@
             });
         } catch (err) {
             elements.adminBookingsTbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 16px; color: var(--busy-color);">${err.message}</td></tr>`;
+        }
+    }
+
+    /**
+     * Load Security Audit Logs (Admin Only)
+     */
+    async function loadAuditLogs() {
+        if (!elements.adminAuditLogsTbody) return;
+        elements.adminAuditLogsTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 16px;">Loading security audit logs...</td></tr>';
+
+        try {
+            const logs = await window.AdminService.getAuditLogs(100);
+            elements.adminAuditLogsTbody.innerHTML = '';
+
+            if (!logs || logs.length === 0) {
+                elements.adminAuditLogsTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-muted);">No audit logs recorded yet.</td></tr>';
+                return;
+            }
+
+            logs.forEach(log => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid var(--border-color)';
+
+                const timeStr = new Date(log.created_at).toLocaleString();
+                let actionBadgeColor = 'var(--text-secondary)';
+                if (log.action.includes('CANCEL') || log.action.includes('DELETE')) actionBadgeColor = 'var(--busy-color)';
+                else if (log.action.includes('CREATE') || log.action.includes('INSERT')) actionBadgeColor = 'var(--available-color)';
+                else if (log.action.includes('UPDATE') || log.action.includes('LOGIN')) actionBadgeColor = 'var(--primary-color)';
+
+                const detailsStr = log.details ? (typeof log.details === 'string' ? log.details : JSON.stringify(log.details)) : '-';
+
+                tr.innerHTML = `
+                    <td style="padding: 8px 12px; font-size: 0.78rem; white-space: nowrap; color: var(--text-muted);">${timeStr}</td>
+                    <td style="padding: 8px 12px;"><span style="font-size: 0.75rem; font-weight: 700; color: ${actionBadgeColor};">${log.action}</span></td>
+                    <td style="padding: 8px 12px; font-weight: 600;">${log.target_id || '-'}</td>
+                    <td style="padding: 8px 12px; font-size: 0.8rem;">${log.performed_by || 'system'}</td>
+                    <td style="padding: 8px 12px; font-size: 0.75rem; color: var(--text-secondary); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${detailsStr.replace(/"/g, '&quot;')}">${detailsStr}</td>
+                `;
+                elements.adminAuditLogsTbody.appendChild(tr);
+            });
+        } catch (err) {
+            elements.adminAuditLogsTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 16px; color: var(--busy-color);">${err.message}</td></tr>`;
         }
     }
 

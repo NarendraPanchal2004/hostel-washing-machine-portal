@@ -20,33 +20,18 @@ const AdminService = (function () {
         const client = window.SupabaseManager.getClient();
         if (client) {
             client.auth.getSession().then(({ data: { session } }) => {
-                if (session?.user) {
-                    currentAdminUser = session.user;
-                    notifyAuthListeners();
-                } else {
-                    checkLocalAdminSession();
-                }
+                currentAdminUser = session?.user || null;
+                notifyAuthListeners();
             }).catch(() => {
-                checkLocalAdminSession();
+                currentAdminUser = null;
+                notifyAuthListeners();
             });
 
             client.auth.onAuthStateChange((event, session) => {
                 currentAdminUser = session?.user || null;
                 notifyAuthListeners();
             });
-        } else {
-            checkLocalAdminSession();
         }
-    }
-
-    function checkLocalAdminSession() {
-        try {
-            const saved = localStorage.getItem('HOSTELWASH_LOCAL_ADMIN');
-            if (saved) {
-                currentAdminUser = JSON.parse(saved);
-                notifyAuthListeners();
-            }
-        } catch (e) {}
     }
 
     function onAuthStateChange(listener) {
@@ -69,50 +54,42 @@ const AdminService = (function () {
     }
 
     /**
-     * Admin Sign In (Supports Mobile ID 7447642019 or Email)
+     * Admin Sign In via Supabase Auth
+     * Authenticates exclusively via Supabase Auth server-side verification.
+     * No hardcoded passwords or client-side bypass flags.
      */
     async function login(identifier, password) {
         const cleanId = (identifier || '').trim();
-        const loginEmail = cleanId.includes('@') ? cleanId : `${cleanId.replace(/\s+/g, '')}@hostel.edu`;
+        let loginEmail = cleanId;
+
+        // Map mobile number to admin email
+        if (!cleanId.includes('@')) {
+            if (cleanId === '7447642019') {
+                loginEmail = 'narendrapanchal8114@gmail.com';
+            } else {
+                loginEmail = `${cleanId}@hostel.edu`;
+            }
+        }
 
         const client = window.SupabaseManager.getClient();
-
-        // 1. If Supabase is connected, authenticate via Supabase Auth
-        if (client) {
-            const { data, error } = await client.auth.signInWithPassword({
-                email: loginEmail,
-                password: password
-            });
-
-            if (!error && data?.user) {
-                currentAdminUser = data.user;
-                localStorage.removeItem('HOSTELWASH_LOCAL_ADMIN');
-                notifyAuthListeners();
-                return data.user;
-            }
-
-            // If Supabase returned invalid login and it matches the designated admin ID
-            if (error && (cleanId === '7447642019' || loginEmail === '7447642019@hostel.edu') && password === 'BVG@250') {
-                console.info('Supabase user not created yet in Auth dashboard; falling back to local admin verification.');
-            } else if (error) {
-                throw new Error(error.message || 'Invalid Admin ID or Password.');
-            }
+        if (!client) {
+            throw new Error('Database connection not established.');
         }
 
-        // 2. Local fallback verification for ID 7447642019
-        if ((cleanId === '7447642019' || loginEmail === '7447642019@hostel.edu') && password === 'BVG@250') {
-            currentAdminUser = {
-                id: 'admin-7447642019',
-                email: '7447642019@hostel.edu',
-                role: 'admin',
-                user_metadata: { full_name: 'Hostel Administrator (7447642019)' }
-            };
-            localStorage.setItem('HOSTELWASH_LOCAL_ADMIN', JSON.stringify(currentAdminUser));
-            notifyAuthListeners();
-            return currentAdminUser;
+        const { data, error } = await client.auth.signInWithPassword({
+            email: loginEmail,
+            password: password
+        });
+
+        if (error || !data?.user) {
+            console.warn('Supabase Auth failed:', error?.message);
+            throw new Error('Invalid Admin ID or Password.');
         }
 
-        throw new Error('Invalid Admin ID or Password.');
+        currentAdminUser = data.user;
+        localStorage.removeItem('HOSTELWASH_LOCAL_ADMIN');
+        notifyAuthListeners();
+        return data.user;
     }
 
     /**
@@ -189,12 +166,27 @@ const AdminService = (function () {
                     updatePayload.active_from_date = activeFromDate || null;
                 }
 
-                await client
+                const { error: updErr } = await client
                     .from('machines')
                     .update(updatePayload)
                     .eq('id', machineId);
+
+                if (updErr) {
+                    throw new Error('Database error: ' + updErr.message);
+                }
+
+                // Log security audit trail
+                try {
+                    await client.from('audit_logs').insert([{
+                        action: 'MACHINE_STATUS_UPDATED',
+                        performed_by: currentAdminUser?.email || 'admin',
+                        target_id: String(machineId),
+                        details: { new_status: newStatus, active_from_date: activeFromDate || null }
+                    }]);
+                } catch (e) {}
             } catch (err) {
-                console.warn('Supabase remote machine status update error:', err);
+                console.error('Supabase remote machine status update error:', err);
+                throw err;
             }
         }
 
@@ -394,12 +386,27 @@ const AdminService = (function () {
         const client = window.SupabaseManager.getClient();
         if (client) {
             try {
-                await client
+                const { error: cancelErr } = await client
                     .from('bookings')
                     .update({ status: 'cancelled' })
                     .eq('id', bookingId);
+
+                if (cancelErr) {
+                    throw new Error('Database cancellation failed: ' + cancelErr.message);
+                }
+
+                // Log security audit trail
+                try {
+                    await client.from('audit_logs').insert([{
+                        action: 'BOOKING_CANCELLED',
+                        performed_by: currentAdminUser?.email || 'admin',
+                        target_id: String(bookingId),
+                        details: { timestamp: new Date().toISOString() }
+                    }]);
+                } catch (e) {}
             } catch (err) {
-                console.warn('Supabase remote cancelBooking error:', err);
+                console.error('Supabase remote cancelBooking error:', err);
+                throw err;
             }
         }
 
@@ -601,11 +608,23 @@ const AdminService = (function () {
 
                 if (error) {
                     console.error('Supabase notice upsert error:', error);
-                } else if (data) {
-                    return data;
+                    throw new Error('Notice save failed: ' + error.message);
                 }
+
+                // Log security audit trail
+                try {
+                    await client.from('audit_logs').insert([{
+                        action: is_active ? 'NOTICE_PUBLISHED' : 'NOTICE_CLEARED',
+                        performed_by: currentAdminUser?.email || 'admin',
+                        target_id: '1',
+                        details: { title, priority, is_active }
+                    }]);
+                } catch (e) {}
+
+                if (data) return data;
             } catch (err) {
                 console.warn('Remote notice save error:', err);
+                throw err;
             }
         }
 
@@ -628,6 +647,33 @@ const AdminService = (function () {
         });
     }
 
+    /**
+     * Fetch security audit logs (Admin only)
+     */
+    async function getAuditLogs(limit = 50) {
+        if (!isAuthenticated()) {
+            throw new Error('UNAUTHORIZED: Only authenticated admins can view audit logs.');
+        }
+
+        const client = window.SupabaseManager.getClient();
+        if (client) {
+            try {
+                const { data, error } = await client
+                    .from('audit_logs')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(limit);
+
+                if (!error && Array.isArray(data)) {
+                    return data;
+                }
+            } catch (err) {
+                console.warn('Failed to fetch audit logs:', err);
+            }
+        }
+        return [];
+    }
+
     return {
         initAuth,
         onAuthStateChange,
@@ -642,7 +688,8 @@ const AdminService = (function () {
         downloadDateWisePdfReport,
         getNotice,
         saveNotice,
-        clearNotice
+        clearNotice,
+        getAuditLogs
     };
 })();
 
