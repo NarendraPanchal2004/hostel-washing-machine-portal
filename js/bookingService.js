@@ -208,6 +208,8 @@ const BookingService = (function () {
 
                     if (!directError && directData) {
                         bookings = directData;
+                    } else {
+                        bookings = getLocalBookings(machineId, dateStr);
                     }
                 }
             } catch (e) {
@@ -360,6 +362,20 @@ const BookingService = (function () {
                     .single();
 
                 if (insertError) {
+                    const msg = insertError.message || '';
+                    if (msg.includes('PGRST205') || msg.includes('bookings') || msg.includes('schema cache')) {
+                        console.warn('Supabase table public.bookings not created yet. Gracefully saving booking locally.');
+                        return bookLocalFallback({
+                            machineId,
+                            studentName,
+                            studentRoll,
+                            studentPhone,
+                            studentEmail,
+                            dateStr,
+                            startISO: startObj.toISOString(),
+                            endISO: endObj.toISOString()
+                        });
+                    }
                     handleSupabaseBookingError(insertError);
                 }
 
