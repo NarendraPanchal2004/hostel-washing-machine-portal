@@ -526,6 +526,108 @@ const AdminService = (function () {
         return true;
     }
 
+    const DEFAULT_NOTICE = {
+        id: 1,
+        title: 'Hostel Laundry Notice / सूचना',
+        content: 'कृपया वॉशिंग मशीन वापरल्यानंतर ड्रम स्वच्छ ठेवा आणि दरवाजा उघडा ठेवा.',
+        author: 'Hostel In-Charge (7447642019)',
+        priority: 'info',
+        is_active: true,
+        updated_at: new Date().toISOString()
+    };
+
+    /**
+     * Get active hostel notice
+     */
+    async function getNotice() {
+        const client = window.SupabaseManager.getClient();
+        if (client) {
+            try {
+                const { data, error } = await client
+                    .from('hostel_notices')
+                    .select('*')
+                    .eq('id', 1)
+                    .maybeSingle();
+
+                if (!error && data) {
+                    try { localStorage.setItem('HOSTELWASH_LOCAL_NOTICE', JSON.stringify(data)); } catch (e) {}
+                    return data;
+                }
+            } catch (err) {
+                console.warn('Failed to fetch notice from Supabase:', err);
+            }
+        }
+
+        try {
+            const saved = localStorage.getItem('HOSTELWASH_LOCAL_NOTICE');
+            if (saved) return JSON.parse(saved);
+        } catch (e) {}
+
+        return DEFAULT_NOTICE;
+    }
+
+    /**
+     * Save / Publish Notice to all students
+     */
+    async function saveNotice({ title, content, priority = 'info', is_active = true }) {
+        if (!isAuthenticated()) {
+            throw new Error('UNAUTHORIZED: Only authenticated admins can publish notices.');
+        }
+
+        const noticeData = {
+            id: 1,
+            title: (title || 'Hostel Laundry Notice').trim(),
+            content: (content || '').trim(),
+            author: currentAdminUser?.user_metadata?.full_name || 'Hostel In-Charge (7447642019)',
+            priority: priority || 'info',
+            is_active: Boolean(is_active),
+            updated_at: new Date().toISOString()
+        };
+
+        // 1. Update LocalStorage
+        try {
+            localStorage.setItem('HOSTELWASH_LOCAL_NOTICE', JSON.stringify(noticeData));
+        } catch (e) {}
+
+        // 2. Update Supabase
+        const client = window.SupabaseManager.getClient();
+        if (client) {
+            try {
+                const { data, error } = await client
+                    .from('hostel_notices')
+                    .upsert(noticeData, { onConflict: 'id' })
+                    .select()
+                    .single();
+
+                if (error) {
+                    console.error('Supabase notice upsert error:', error);
+                } else if (data) {
+                    return data;
+                }
+            } catch (err) {
+                console.warn('Remote notice save error:', err);
+            }
+        }
+
+        return noticeData;
+    }
+
+    /**
+     * Clear / Deactivate Notice
+     */
+    async function clearNotice() {
+        if (!isAuthenticated()) {
+            throw new Error('UNAUTHORIZED: Only authenticated admins can clear notices.');
+        }
+
+        return saveNotice({
+            title: '',
+            content: '',
+            priority: 'info',
+            is_active: false
+        });
+    }
+
     return {
         initAuth,
         onAuthStateChange,
@@ -537,7 +639,10 @@ const AdminService = (function () {
         uploadWashingModePhoto,
         getAllBookings,
         cancelBooking,
-        downloadDateWisePdfReport
+        downloadDateWisePdfReport,
+        getNotice,
+        saveNotice,
+        clearNotice
     };
 })();
 

@@ -89,6 +89,23 @@
         elements.btnTestSupabaseConn = document.getElementById('btn-test-supabase-conn');
         elements.btnSaveSupabaseConn = document.getElementById('btn-save-supabase-conn');
         elements.setupTestResult = document.getElementById('setup-test-result');
+
+        // Notice Board Elements
+        elements.hostelNoticeBoard = document.getElementById('hostel-notice-board');
+        elements.noticeCard = document.getElementById('notice-card');
+        elements.noticeDateTime = document.getElementById('notice-date-time');
+        elements.noticeHeadline = document.getElementById('notice-headline');
+        elements.noticeMessage = document.getElementById('notice-message');
+        elements.noticeSigned = document.getElementById('notice-signed');
+        elements.adminNoticeTitle = document.getElementById('admin-notice-title');
+        elements.adminNoticeContent = document.getElementById('admin-notice-content');
+        elements.adminNoticePriority = document.getElementById('admin-notice-priority');
+        elements.adminNoticeActive = document.getElementById('admin-notice-active');
+        elements.btnSaveNotice = document.getElementById('btn-save-notice');
+        elements.btnClearNotice = document.getElementById('btn-clear-notice');
+        elements.adminNoticePreviewBox = document.getElementById('admin-notice-preview-box');
+        elements.previewNoticeTitle = document.getElementById('preview-notice-title');
+        elements.previewNoticeBody = document.getElementById('preview-notice-body');
     }
 
     /**
@@ -102,15 +119,18 @@
         // 1. Immediately setup 7-Day Rolling Date Selector so pills render instantly
         try { initDateSelector(); } catch (e) { console.error('initDateSelector failed:', e); }
 
-        // 2. Immediately Load & Render 4 Machines
+        // 2. Immediately render Notice Board (loads instantly from cache)
+        try { initNoticeBoard(); } catch (e) { console.error('initNoticeBoard failed:', e); }
+
+        // 3. Immediately Load & Render 4 Machines
         try { await reloadMachines(); } catch (e) { console.error('reloadMachines failed:', e); }
 
-        // 3. Initialize Modals and UI Interactions
+        // 4. Initialize Modals and UI Interactions
         try { initModalEvents(); } catch (e) { console.error('initModalEvents failed:', e); }
         try { initSetupModal(); } catch (e) { console.error('initSetupModal failed:', e); }
         try { initAdminAuth(); } catch (e) { console.error('initAdminAuth failed:', e); }
 
-        // 4. Initialize Supabase Connection
+        // 5. Initialize Supabase Connection
         try {
             window.SupabaseManager.initClient();
             window.SupabaseManager.onStateChange(handleDbStateChange);
@@ -118,11 +138,11 @@
             console.error('SupabaseManager init failed:', e);
         }
 
-        // 5. Setup Realtime Listener
+        // 6. Setup Realtime Listener
         try {
             window.SupabaseManager.subscribeRealtime(
                 () => {
-                    console.log('Realtime update detected, reloading machines...');
+                    console.log('Realtime machine event detected, reloading machines...');
                     reloadMachines();
                 },
                 () => {
@@ -131,21 +151,26 @@
                     if (elements.adminDashboardModal && elements.adminDashboardModal.classList.contains('active')) {
                         loadAdminBookings();
                     }
+                },
+                () => {
+                    console.log('Realtime notice update detected, reloading notice board...');
+                    renderNoticeBoard();
                 }
             );
         } catch (e) {
             console.error('Realtime subscription failed:', e);
         }
 
-        // 6. Check if user arrived via QR Code scan (e.g. ?machine=2)
+        // 7. Check if user arrived via QR Code scan (e.g. ?machine=2)
         try { handleQrScanUrl(); } catch (e) { console.error('handleQrScanUrl failed:', e); }
 
-        // 7. Setup Live Countdown Timer Interval (runs every 30s)
+        // 8. Setup Live Countdown Timer Interval (runs every 30s)
         setInterval(updateActiveWashCountdowns, 30000);
 
-        // 8. Background Auto-Sync Polling (every 10s across all mobile devices)
+        // 9. Background Auto-Sync Polling (every 10s across all mobile devices)
         setInterval(() => {
             reloadMachines();
+            renderNoticeBoard();
             if (elements.adminDashboardModal && elements.adminDashboardModal.classList.contains('active')) {
                 loadAdminBookings();
             }
@@ -299,7 +324,8 @@
             updateKpiMetrics();
         } catch (err) {
             console.error('Failed to load machines:', err);
-            showToast('Could not load machines.', 'error');
+            // Fallback rendering ensures cards are ALWAYS visible
+            await renderMachineCards();
         }
     }
 
@@ -309,116 +335,166 @@
             console.error('machines-container DOM element not found');
             return;
         }
-        container.innerHTML = '';
 
+        // Guarantee 4 default machines if state.machines is empty
         if (!state.machines || state.machines.length === 0) {
-            try {
-                state.machines = await window.BookingService.getMachines();
-            } catch (e) {
-                console.warn('Could not fetch machines, falling back to defaults:', e);
-            }
+            state.machines = [
+                { id: 1, name: 'Machine 1 (Bay 1)', model: 'LG Commercial AI Direct Drive 9.0 Kg', capacity_kg: 9.0, status: 'available', location: 'Laundry Hall (Ground Floor, Bay 1)' },
+                { id: 2, name: 'Machine 2 (Bay 2)', model: 'Samsung Inverter Eco Drum 9.0 Kg', capacity_kg: 9.0, status: 'available', location: 'Laundry Hall (Ground Floor, Bay 2)' },
+                { id: 3, name: 'Machine 3 (Bay 3)', model: 'Bosch Serie 6 VarioDrum 9.0 Kg', capacity_kg: 9.0, status: 'available', location: 'Laundry Hall (Ground Floor, Bay 3)' },
+                { id: 4, name: 'Machine 4 (Bay 4)', model: 'IFB Senator Heavy Steam Pro 9.0 Kg', capacity_kg: 9.0, status: 'available', location: 'Laundry Hall (Ground Floor, Bay 4)' }
+            ];
         }
 
-        for (const machine of state.machines) {
-            try {
-                const card = document.createElement('article');
-                card.className = `machine-card ${machine.status}`;
-                card.id = `machine-card-${machine.id}`;
+        // 1. Fetch live cloud data in ONE parallel batch (fast 300ms)
+        let allDateBookings = [];
+        let allActiveCycles = {};
+        try {
+            const [bookingsResult, cyclesResult] = await Promise.all([
+                window.BookingService.getAllBookingsForDate(state.selectedDateStr),
+                window.BookingService.getAllActiveCycles()
+            ]);
+            allDateBookings = bookingsResult || [];
+            allActiveCycles = cyclesResult || {};
+        } catch (e) {
+            console.warn('Batch fetch error, continuing with available data:', e);
+        }
 
-            // Fetch active 75-min cycle
-            const activeCycle = await window.BookingService.getMachineActiveCycle(machine.id);
+        // Standard 75-min slots for current date
+        const standardSlots = window.BookingService.generateStandardSlotsForDate(state.selectedDateStr);
 
-            // Fetch 75-min slots for selected date
-            const slots = await window.BookingService.getMachineSlotAvailability(machine.id, state.selectedDateStr, machine);
+        const photoFallbackMap = {
+            1: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=800&q=80',
+            2: 'https://images.unsplash.com/photo-1604335399105-a0c585fd81a1?auto=format&fit=crop&w=800&q=80',
+            3: 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?auto=format&fit=crop&w=800&q=80',
+            4: 'https://images.unsplash.com/photo-1545173168-9f1947eebb7f?auto=format&fit=crop&w=800&q=80'
+        };
 
-            // Compute available slots count
-            const availableCount = slots.filter(s => s.status === 'available').length;
+        const statusBadgeMap = {
+            available: '<span class="machine-badge-overlay badge-available">● Available</span>',
+            in_use: '<span class="machine-badge-overlay badge-in_use">● In Use (75m Cycle)</span>',
+            maintenance: '<span class="machine-badge-overlay badge-maintenance">⚠ Maintenance</span>',
+            offline: '<span class="machine-badge-overlay badge-offline">○ Offline</span>'
+        };
 
-            const photoUrl = machine.photo_url || 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=800&q=80';
-
+        // 2. Build DOM cards HTML safely in memory
+        const cardsHtml = state.machines.map(machine => {
+            const photoUrl = machine.photo_url || photoFallbackMap[machine.id] || photoFallbackMap[1];
             const isFutureScheduled = machine.active_from_date && state.selectedDateStr < machine.active_from_date;
-            const isCardDisabled = machine.status === 'offline' || machine.status === 'maintenance' || isFutureScheduled;
-
-            const statusBadgeMap = {
-                available: '<span class="machine-badge-overlay badge-available">● Available</span>',
-                in_use: '<span class="machine-badge-overlay badge-in_use">● In Use (75m Cycle)</span>',
-                maintenance: '<span class="machine-badge-overlay badge-maintenance">⚠ Maintenance</span>',
-                offline: '<span class="machine-badge-overlay badge-offline">○ Offline</span>'
-            };
+            const isHardOffline = machine.status === 'offline' || machine.status === 'maintenance';
+            const isCardDisabled = isHardOffline || isFutureScheduled;
 
             const currentBadge = isFutureScheduled
                 ? `<span class="machine-badge-overlay badge-offline">📅 Starts on ${machine.active_from_date}</span>`
                 : (statusBadgeMap[machine.status] || statusBadgeMap.available);
 
-            card.innerHTML = `
-                <div class="machine-photo-wrapper">
-                    <img class="machine-photo-img" src="${photoUrl}" alt="${machine.name}" loading="lazy">
-                    ${currentBadge}
-                    <button class="machine-qr-trigger" title="Machine ${machine.id} QR Code" data-qr-machine="${machine.id}">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="14" width="7" height="7"></rect>
-                            <rect x="3" y="14" width="7" height="7"></rect>
-                        </svg>
-                    </button>
-                </div>
+            // Active wash cycle for this machine
+            const activeCycle = allActiveCycles[machine.id] || { isActive: false, remainingMinutes: 0 };
 
-                <div class="machine-card-body">
-                    <div class="machine-title-row">
-                        <div>
-                            <h3 class="machine-title">${machine.name}</h3>
-                            <p class="machine-model">${machine.model}</p>
-                        </div>
-                    </div>
+            // Machine-specific bookings for this date
+            const machineBookings = allDateBookings.filter(b => Number(b.machine_id) === Number(machine.id));
 
-                    <div class="machine-specs-row">
-                        <span class="spec-badge">⚖️ ${machine.capacity_kg} Kg Capacity</span>
-                        <span class="spec-badge">⏱️ 75m Fixed Slot</span>
-                        <span class="spec-badge">📍 Bay ${machine.id}</span>
-                    </div>
+            // Compute slots availability
+            const slots = standardSlots.map(slot => {
+                const slotStartMs = new Date(slot.startISO).getTime();
+                const slotEndMs = new Date(slot.endISO).getTime();
 
-                    ${activeCycle.isActive ? `
-                        <div class="cycle-countdown-badge">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polyline points="12 6 12 12 16 14"></polyline>
+                const matchedBooking = machineBookings.find(b => {
+                    if (b.status === 'cancelled') return false;
+                    const bStartMs = new Date(b.start_time).getTime();
+                    const bEndMs = new Date(b.end_time).getTime();
+                    return bStartMs < slotEndMs && bEndMs > slotStartMs;
+                });
+
+                let slotStatus = 'available';
+                if (isFutureScheduled) {
+                    slotStatus = 'offline';
+                } else if (isHardOffline) {
+                    slotStatus = machine.status;
+                } else if (matchedBooking) {
+                    slotStatus = 'booked';
+                } else if (slot.isPast) {
+                    slotStatus = 'past';
+                }
+
+                return {
+                    ...slot,
+                    status: slotStatus,
+                    bookingId: matchedBooking ? matchedBooking.id : null
+                };
+            });
+
+            const availableCount = slots.filter(s => s.status === 'available').length;
+
+            return `
+                <article class="machine-card ${machine.status}" id="machine-card-${machine.id}">
+                    <div class="machine-photo-wrapper">
+                        <img class="machine-photo-img" src="${photoUrl}" alt="${machine.name}" loading="lazy">
+                        ${currentBadge}
+                        <button class="machine-qr-trigger" title="Machine ${machine.id} QR Code" data-qr-machine="${machine.id}">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
                             </svg>
-                            <span>Wash Cycle Running: <strong>${activeCycle.remainingMinutes}m</strong> remaining</span>
-                        </div>
-                    ` : ''}
-
-                    <!-- 75-Min Slot Timeline Chips Preview -->
-                    <div class="slots-preview-title">
-                        <span>Slots for ${state.selectedDateStr}</span>
-                        <span style="color: var(--available-color);">${availableCount} Available</span>
+                        </button>
                     </div>
-                    <div class="slots-chips-grid">
-                        ${slots.map(s => `
-                            <div class="slot-chip ${s.status}" title="${s.label} (${s.status.toUpperCase()})" data-slot-start="${s.startISO}">
-                                ${s.startTime}
+
+                    <div class="machine-card-body">
+                        <div class="machine-title-row">
+                            <div>
+                                <h3 class="machine-title">${machine.name}</h3>
+                                <p class="machine-model">${machine.model}</p>
                             </div>
-                        `).join('')}
-                    </div>
+                        </div>
 
-                    <div class="machine-card-footer">
-                        <button class="btn btn-secondary btn-modes-guide" data-machine-id="${machine.id}">
-                            <span>Washing Modes</span>
-                        </button>
-                        <button class="btn btn-primary btn-book-slot" data-machine-id="${machine.id}" ${isCardDisabled ? 'disabled' : ''}>
-                            <span>${isFutureScheduled ? `Starts ${machine.active_from_date}` : 'Book 75-Min Slot'}</span>
-                        </button>
+                        <div class="machine-specs-row">
+                            <span class="spec-badge">⚖️ ${machine.capacity_kg || 9.0} Kg Capacity</span>
+                            <span class="spec-badge">⏱️ 75m Fixed Slot</span>
+                            <span class="spec-badge">📍 Bay ${machine.id}</span>
+                        </div>
+
+                        ${activeCycle.isActive ? `
+                            <div class="cycle-countdown-badge">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                <span>Wash Cycle Running: <strong>${activeCycle.remainingMinutes}m</strong> remaining</span>
+                            </div>
+                        ` : ''}
+
+                        <!-- 75-Min Slot Timeline Chips Preview -->
+                        <div class="slots-preview-title">
+                            <span>Slots for ${state.selectedDateStr}</span>
+                            <span style="color: var(--available-color); font-weight: 700;">${availableCount} Available</span>
+                        </div>
+                        <div class="slots-chips-grid">
+                            ${slots.map(s => `
+                                <div class="slot-chip ${s.status}" title="${s.label} (${s.status.toUpperCase()})" data-slot-start="${s.startISO}">
+                                    ${s.startTime}
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="machine-card-footer">
+                            <button class="btn btn-secondary btn-modes-guide" data-machine-id="${machine.id}">
+                                <span>Washing Modes</span>
+                            </button>
+                            <button class="btn btn-primary btn-book-slot" data-machine-id="${machine.id}" ${isCardDisabled ? 'disabled' : ''}>
+                                <span>${isFutureScheduled ? `Starts ${machine.active_from_date}` : 'Book 75-Min Slot'}</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
+                </article>
             `;
+        }).join('');
 
-                container.appendChild(card);
-            } catch (err) {
-                console.error(`Error rendering machine ${machine.id}:`, err);
-            }
-        }
+        // 3. Atomically update container in ONE single DOM mutation
+        container.innerHTML = cardsHtml;
 
-        // Attach Card Button Listeners
+        // 4. Attach Card Button Listeners
         document.querySelectorAll('.btn-book-slot').forEach(btn => {
             btn.addEventListener('click', () => {
                 const machineId = Number(btn.dataset.machineId);
@@ -439,6 +515,111 @@
                 openQrModal();
             });
         });
+    }
+
+    /**
+     * Notice Board / Notepad Controller
+     */
+    async function initNoticeBoard() {
+        await renderNoticeBoard();
+
+        if (elements.btnSaveNotice) {
+            elements.btnSaveNotice.addEventListener('click', async () => {
+                const title = (elements.adminNoticeTitle?.value || '').trim();
+                const content = (elements.adminNoticeContent?.value || '').trim();
+                const priority = elements.adminNoticePriority?.value || 'info';
+                const isActive = elements.adminNoticeActive ? elements.adminNoticeActive.checked : true;
+
+                if (!content) {
+                    showToast('Please enter notice text.', 'warning');
+                    return;
+                }
+
+                try {
+                    elements.btnSaveNotice.disabled = true;
+                    elements.btnSaveNotice.innerHTML = '<span>Publishing...</span>';
+                    await window.AdminService.saveNotice({
+                        title,
+                        content,
+                        priority,
+                        is_active: isActive
+                    });
+                    await renderNoticeBoard();
+                    showToast('Notice published live to all students!', 'success');
+                } catch (err) {
+                    showToast(err.message || 'Failed to publish notice', 'error');
+                } finally {
+                    elements.btnSaveNotice.disabled = false;
+                    elements.btnSaveNotice.innerHTML = '<span>🚀 Publish Notice (सूचना सर्वांना पाठवा)</span>';
+                }
+            });
+        }
+
+        if (elements.btnClearNotice) {
+            elements.btnClearNotice.addEventListener('click', async () => {
+                try {
+                    elements.btnClearNotice.disabled = true;
+                    await window.AdminService.clearNotice();
+                    if (elements.adminNoticeContent) elements.adminNoticeContent.value = '';
+                    await renderNoticeBoard();
+                    showToast('Notice cleared from student portal.', 'info');
+                } catch (err) {
+                    showToast(err.message || 'Failed to clear notice', 'error');
+                } finally {
+                    elements.btnClearNotice.disabled = false;
+                }
+            });
+        }
+
+        // Live preview sync in admin modal
+        const updateAdminPreview = () => {
+            const title = elements.adminNoticeTitle?.value || 'Hostel Laundry Notice / सूचना';
+            const content = elements.adminNoticeContent?.value || 'सूचना मजकूर...';
+            const priority = elements.adminNoticePriority?.value || 'info';
+
+            if (elements.previewNoticeTitle) elements.previewNoticeTitle.textContent = title;
+            if (elements.previewNoticeBody) elements.previewNoticeBody.textContent = content;
+            if (elements.adminNoticePreviewBox) {
+                elements.adminNoticePreviewBox.className = `notice-card ${priority}`;
+            }
+        };
+
+        elements.adminNoticeTitle?.addEventListener('input', updateAdminPreview);
+        elements.adminNoticeContent?.addEventListener('input', updateAdminPreview);
+        elements.adminNoticePriority?.addEventListener('change', updateAdminPreview);
+    }
+
+    async function renderNoticeBoard() {
+        if (!elements.hostelNoticeBoard) return;
+        try {
+            const notice = await window.AdminService.getNotice();
+            if (notice && notice.is_active && notice.content && notice.content.trim()) {
+                if (elements.noticeHeadline) elements.noticeHeadline.textContent = notice.title || 'Hostel Laundry Notice / सूचना';
+                if (elements.noticeMessage) elements.noticeMessage.textContent = notice.content;
+                if (elements.noticeSigned) elements.noticeSigned.textContent = `By: ${notice.author || 'Hostel In-Charge (7447642019)'}`;
+
+                const timeText = notice.updated_at ? new Date(notice.updated_at).toLocaleDateString('en-US', {
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                }) : 'Active';
+                if (elements.noticeDateTime) elements.noticeDateTime.textContent = timeText;
+
+                if (elements.noticeCard) elements.noticeCard.className = `notice-card ${notice.priority || 'info'}`;
+                elements.hostelNoticeBoard.style.display = 'block';
+
+                // Also populate admin form fields if present
+                if (elements.adminNoticeTitle && !elements.adminNoticeTitle.matches(':focus')) elements.adminNoticeTitle.value = notice.title || '';
+                if (elements.adminNoticeContent && !elements.adminNoticeContent.matches(':focus')) elements.adminNoticeContent.value = notice.content || '';
+                if (elements.adminNoticePriority) elements.adminNoticePriority.value = notice.priority || 'info';
+                if (elements.adminNoticeActive) elements.adminNoticeActive.checked = notice.is_active !== false;
+                if (elements.previewNoticeTitle) elements.previewNoticeTitle.textContent = notice.title || '';
+                if (elements.previewNoticeBody) elements.previewNoticeBody.textContent = notice.content || '';
+                if (elements.adminNoticePreviewBox) elements.adminNoticePreviewBox.className = `notice-card ${notice.priority || 'info'}`;
+            } else {
+                elements.hostelNoticeBoard.style.display = 'none';
+            }
+        } catch (e) {
+            console.warn('renderNoticeBoard failed:', e);
+        }
     }
 
     /**
@@ -716,6 +897,8 @@
 
                 if (tabBtn.dataset.tab === 'tab-manage-bookings') {
                     loadAdminBookings();
+                } else if (tabBtn.dataset.tab === 'tab-notice-board') {
+                    renderNoticeBoard();
                 }
             });
         });

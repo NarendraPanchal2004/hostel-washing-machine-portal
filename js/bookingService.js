@@ -114,10 +114,11 @@ const BookingService = (function () {
 
         const slots = [];
         const now = new Date();
+        const [year, month, day] = dateStr.split('-').map(Number);
 
         STANDARD_SLOT_STARTS.forEach((startStr, index) => {
             const [hours, mins] = startStr.split(':').map(Number);
-            const startObj = new Date(`${dateStr}T${startStr}:00`);
+            const startObj = new Date(year, (month || 1) - 1, day || 1, hours, mins, 0, 0);
             const endObj = new Date(startObj.getTime() + SLOT_DURATION_MINUTES * 60 * 1000);
 
             const endHours = String(endObj.getHours()).padStart(2, '0');
@@ -603,6 +604,80 @@ const BookingService = (function () {
         return { isActive: false, remainingMinutes: 0 };
     }
 
+    /**
+     * Fetch all bookings for a given date across all 4 machines in ONE single request
+     */
+    async function getAllBookingsForDate(dateStr) {
+        const client = window.SupabaseManager.getClient();
+        if (client) {
+            try {
+                const { data, error } = await client
+                    .rpc('get_public_machine_slots', { p_date: dateStr });
+                if (!error && Array.isArray(data)) {
+                    return data;
+                }
+            } catch (e) {
+                console.warn('RPC get_public_machine_slots fallback:', e);
+            }
+
+            try {
+                const { data, error } = await client
+                    .from('bookings')
+                    .select('id, machine_id, booking_date, start_time, end_time, status')
+                    .eq('booking_date', dateStr)
+                    .neq('status', 'cancelled');
+                if (!error && Array.isArray(data)) {
+                    return data;
+                }
+            } catch (e) {}
+        }
+
+        // Local storage fallback
+        try {
+            const saved = localStorage.getItem('HOSTELWASH_LOCAL_BOOKINGS');
+            if (saved) {
+                const all = JSON.parse(saved);
+                return all.filter(b => b.booking_date === dateStr && b.status !== 'cancelled');
+            }
+        } catch (e) {}
+        return [];
+    }
+
+    /**
+     * Compute active wash cycles for all 4 machines in ONE single request
+     */
+    async function getAllActiveCycles() {
+        const client = window.SupabaseManager.getClient();
+        const now = new Date();
+        const nowISO = now.toISOString();
+        const activeCycles = { 1: { isActive: false }, 2: { isActive: false }, 3: { isActive: false }, 4: { isActive: false } };
+
+        if (client) {
+            try {
+                const { data, error } = await client
+                    .from('bookings')
+                    .select('id, machine_id, start_time, end_time, status')
+                    .neq('status', 'cancelled')
+                    .lte('start_time', nowISO)
+                    .gte('end_time', nowISO);
+
+                if (!error && Array.isArray(data)) {
+                    data.forEach(b => {
+                        const endMs = new Date(b.end_time).getTime();
+                        const remainingMins = Math.max(1, Math.ceil((endMs - now.getTime()) / 60000));
+                        activeCycles[b.machine_id] = {
+                            isActive: true,
+                            remainingMinutes: remainingMins,
+                            endTime: b.end_time,
+                            bookingId: b.id
+                        };
+                    });
+                }
+            } catch (e) {}
+        }
+        return activeCycles;
+    }
+
     return {
         SLOT_DURATION_MINUTES,
         STANDARD_SLOT_STARTS,
@@ -610,6 +685,8 @@ const BookingService = (function () {
         generateStandardSlotsForDate,
         getMachines,
         getMachineSlotAvailability,
+        getAllBookingsForDate,
+        getAllActiveCycles,
         bookWashingSlot,
         getMachineActiveCycle
     };

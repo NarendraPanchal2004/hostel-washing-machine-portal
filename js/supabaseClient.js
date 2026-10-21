@@ -96,7 +96,7 @@ const SupabaseManager = (function () {
         listener(connectionState, '');
     }
 
-    function subscribeRealtime(onMachineEvent, onBookingEvent) {
+    function subscribeRealtime(onMachineEvent, onBookingEvent, onNoticeEvent) {
         if (!client) return null;
 
         // Clean up any existing channel
@@ -121,6 +121,14 @@ const SupabaseManager = (function () {
                     payload => {
                         console.log('Realtime Booking Event:', payload);
                         if (typeof onBookingEvent === 'function') onBookingEvent(payload);
+                    }
+                )
+                .on(
+                    'postgres_changes',
+                    { event: '*', schema: 'public', table: 'hostel_notices' },
+                    payload => {
+                        console.log('Realtime Notice Event:', payload);
+                        if (typeof onNoticeEvent === 'function') onNoticeEvent(payload);
                     }
                 )
                 .subscribe((status) => {

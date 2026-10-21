@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <link rel="stylesheet" href="style.css?v=3.9">
+    <link rel="stylesheet" href="style.css?v=4.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -133,6 +133,31 @@
                 <div class="kpi-info">
                     <h3>75 Mins</h3>
                     <p>Strict Fixed Slot Limit</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hostel Laundry Notice Board / Warden Announcement Banner -->
+        <section id="hostel-notice-board" class="notice-board-container" style="display: none;">
+            <div id="notice-card" class="notice-card info">
+                <div class="notice-card-inner">
+                    <div class="notice-icon-circle">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                    </div>
+                    <div class="notice-text-content">
+                        <div class="notice-top-row">
+                            <span class="notice-badge">📢 हॉस्टेल सूचना • OFFICIAL NOTICE</span>
+                            <span id="notice-date-time" class="notice-timestamp">Just now</span>
+                        </div>
+                        <h4 id="notice-headline" class="notice-headline">Hostel Laundry Notice</h4>
+                        <p id="notice-message" class="notice-message"></p>
+                        <div class="notice-meta-row">
+                            <span id="notice-signed" class="notice-signer">By: Hostel In-Charge (7447642019)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -416,6 +441,7 @@
                 <div class="admin-tabs">
                     <button type="button" class="admin-tab-btn active" data-tab="tab-manage-machines">Machine Status & Photos</button>
                     <button type="button" class="admin-tab-btn" data-tab="tab-manage-bookings">Manage Bookings</button>
+                    <button type="button" class="admin-tab-btn" data-tab="tab-notice-board">📢 Notice Board (Notepad)</button>
                     <button type="button" class="admin-tab-btn" data-tab="tab-pdf-reports">Date-Wise PDF Reports</button>
                 </div>
 
@@ -494,6 +520,75 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- TAB 4: Notice Board / Admin Notepad -->
+                <div id="tab-notice-board" class="admin-tab-content" style="display: none;">
+                    <div style="background-color: var(--bg-primary); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 14px;">
+                        <div>
+                            <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 4px;">📝 Hostel Notice Board / Notepad (सूचना फलक)</h4>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                                इथे लिहिलेली सूचना सर्व विद्यार्थ्यांच्या मोबाईलवर मुख्य स्क्रीनवर तात्काळ (Live Sync) दिसेल.
+                            </p>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Notice Title (सूचनेचे शीर्षक)</label>
+                            <input type="text" id="admin-notice-title" class="form-input" placeholder="उदा. वॉशिंग मशीन सूचना / पाणी पुरवठा" value="Hostel Laundry Notice / सूचना">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Notice Content / Note (सूचनेचा संपूर्ण मजकूर)</label>
+                            <textarea id="admin-notice-content" class="form-input" rows="4" placeholder="विद्यार्थ्यांसाठी महत्त्वाची सूचना इथे लिहा... (उदा. उद्या दुपारी २ ते ५ पाणी पुरवठा बंद राहील, मशीन वापरल्यानंतर दरवाजा उघडा ठेवा इ.)"></textarea>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Urgency / Type (प्राधान्य)</label>
+                                <select id="admin-notice-priority" class="form-select">
+                                    <option value="info">ℹ️ Normal Info (सामान्य - Blue)</option>
+                                    <option value="warning">⚠️ Alert / Maintenance (सावधान - Amber)</option>
+                                    <option value="urgent">🚨 Urgent Notice (तातडीची सूचना - Red)</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0; display: flex; align-items: flex-end;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 0; font-size: 0.88rem; font-weight: 600;">
+                                    <input type="checkbox" id="admin-notice-active" checked style="width: 18px; height: 18px; cursor: pointer;">
+                                    <span>Show on Portal (सक्रिय ठेवा)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button type="button" id="btn-save-notice" class="btn btn-primary" style="flex: 2; min-width: 180px;">
+                                <span>🚀 Publish Notice (सूचना सर्वांना पाठवा)</span>
+                            </button>
+                            <button type="button" id="btn-clear-notice" class="btn btn-secondary" style="flex: 1; min-width: 130px;">
+                                <span>🗑️ Clear Notice (हटवा)</span>
+                            </button>
+                        </div>
+
+                        <!-- Live Preview Box -->
+                        <div style="margin-top: 10px; padding: 12px; background: var(--bg-card); border-radius: var(--radius-sm); border: 1px dashed var(--border-color);">
+                            <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">
+                                📱 Live Student View Preview (विद्यार्थ्यांना असे दिसेल):
+                            </span>
+                            <div id="admin-notice-preview-box" class="notice-card info">
+                                <div class="notice-card-inner">
+                                    <div class="notice-icon-circle">📢</div>
+                                    <div class="notice-text-content">
+                                        <div class="notice-top-row">
+                                            <span class="notice-badge">📢 हॉस्टेल सूचना</span>
+                                            <span class="notice-timestamp">Live</span>
+                                        </div>
+                                        <h4 id="preview-notice-title" class="notice-headline">Hostel Laundry Notice / सूचना</h4>
+                                        <p id="preview-notice-body" class="notice-message" style="margin-bottom: 4px;">सूचना मजकूर...</p>
+                                        <span class="notice-signer">By: Hostel In-Charge (7447642019)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -533,11 +628,11 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Application Controller Scripts -->
-    <script src="js/config.js?v=3.9"></script>
-    <script src="js/supabaseClient.js?v=3.9"></script>
-    <script src="js/bookingService.js?v=3.9"></script>
-    <script src="js/adminService.js?v=3.9"></script>
-    <script src="js/qrService.js?v=3.9"></script>
-    <script src="script.js?v=3.9"></script>
+    <script src="js/config.js?v=4.0"></script>
+    <script src="js/supabaseClient.js?v=4.0"></script>
+    <script src="js/bookingService.js?v=4.0"></script>
+    <script src="js/adminService.js?v=4.0"></script>
+    <script src="js/qrService.js?v=4.0"></script>
+    <script src="script.js?v=4.0"></script>
 </body>
 </html>

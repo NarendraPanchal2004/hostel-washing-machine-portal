@@ -369,6 +369,158 @@ body {
     gap: 10px;
 }
 
+/* Hostel Laundry Notice Board / Warden Announcement Banner */
+.notice-board-container {
+    animation: fadeInSlide 0.3s ease-out;
+}
+
+@keyframes fadeInSlide {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.notice-card {
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    background-color: var(--bg-card);
+    border: 1.5px solid var(--primary-light);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.notice-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 100%;
+    background-color: var(--primary-color);
+}
+
+.notice-card.info {
+    border-color: rgba(37, 99, 235, 0.3);
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.04) 0%, var(--bg-card) 100%);
+}
+.notice-card.info::before {
+    background-color: var(--primary-color);
+}
+.notice-card.info .notice-icon-circle {
+    background-color: rgba(37, 99, 235, 0.12);
+    color: var(--primary-color);
+}
+.notice-card.info .notice-badge {
+    background-color: rgba(37, 99, 235, 0.1);
+    color: var(--primary-color);
+}
+
+.notice-card.warning {
+    border-color: rgba(245, 158, 11, 0.35);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, var(--bg-card) 100%);
+}
+.notice-card.warning::before {
+    background-color: #f59e0b;
+}
+.notice-card.warning .notice-icon-circle {
+    background-color: rgba(245, 158, 11, 0.14);
+    color: #d97706;
+}
+.notice-card.warning .notice-badge {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #b45309;
+}
+
+.notice-card.urgent {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, var(--bg-card) 100%);
+}
+.notice-card.urgent::before {
+    background-color: #ef4444;
+}
+.notice-card.urgent .notice-icon-circle {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+.notice-card.urgent .notice-badge {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+}
+
+.notice-card-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.notice-icon-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.25rem;
+}
+
+.notice-text-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notice-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.notice-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.notice-timestamp {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.notice-headline {
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    line-height: 1.35;
+}
+
+.notice-message {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    white-space: pre-line;
+    margin-bottom: 8px;
+}
+
+.notice-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.notice-signer {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
 /* 7-Day Date Selector Bar */
 .date-selector-bar {
     background-color: var(--bg-card);
