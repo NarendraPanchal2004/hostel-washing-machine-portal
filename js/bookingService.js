@@ -60,12 +60,52 @@ const BookingService = (function () {
         }
     ];
 
-    // Standard 75-minute operational slots (06:30 AM to 00:00 AM)
-    const STANDARD_SLOT_STARTS = [
+    // Monday to Thursday standard 75-minute slots (06:30 AM to 00:00 AM Midnight) - 14 slots
+    const WEEKDAY_SLOT_STARTS = [
         '06:30', '07:45', '09:00', '10:15', '11:30',
         '12:45', '14:00', '15:15', '16:30', '17:45',
         '19:00', '20:15', '21:30', '22:45'
     ];
+
+    // Friday, Saturday, Sunday 75-minute slots (05:00 AM to 02:00 AM Following Day) - 17 slots
+    const WEEKEND_SLOT_STARTS = [
+        '05:00', '06:15', '07:30', '08:45', '10:00',
+        '11:15', '12:30', '13:45', '15:00', '16:15',
+        '17:30', '18:45', '20:00', '21:15', '22:30',
+        '23:45', '01:00'
+    ];
+
+    // Backward compatibility alias
+    const STANDARD_SLOT_STARTS = WEEKDAY_SLOT_STARTS;
+
+    /**
+     * Determine operational schedule for a date
+     * Friday (5), Saturday (6), Sunday (0) -> Weekend Schedule (5:00 AM to 2:00 AM following day)
+     * Monday (1) to Thursday (4) -> Weekday Schedule (6:30 AM to Midnight)
+     */
+    function getScheduleForDate(dateStr) {
+        if (!dateStr || typeof dateStr !== 'string') {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            dateStr = `${yyyy}-${mm}-${dd}`;
+        }
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const dateObj = new Date(year, (month || 1) - 1, day || 1);
+        const dayOfWeek = dateObj.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6;
+
+        return {
+            isWeekend,
+            dayOfWeek,
+            dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek],
+            slotStarts: isWeekend ? WEEKEND_SLOT_STARTS : WEEKDAY_SLOT_STARTS,
+            name: isWeekend ? 'Weekend Schedule (Fri - Sun)' : 'Weekday Schedule (Mon - Thu)',
+            operatingHoursText: isWeekend ? '5:00 AM – 2:00 AM (Next Day)' : '6:30 AM – 12:00 AM Midnight',
+            totalSlots: isWeekend ? 17 : 14
+        };
+    }
 
     /**
      * Get list of allowed booking dates: Today + next 6 days (7 rolling days)
@@ -86,6 +126,7 @@ const BookingService = (function () {
 
             const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
             const monthDay = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const sched = getScheduleForDate(dateStr);
 
             dates.push({
                 dateStr,
@@ -94,7 +135,9 @@ const BookingService = (function () {
                 isTomorrow: i === 1,
                 label: i === 0 ? `Today (${monthDay})` : i === 1 ? `Tomorrow (${monthDay})` : `${weekday}, ${monthDay}`,
                 shortLabel: i === 0 ? 'Today' : weekday,
-                subLabel: monthDay
+                subLabel: monthDay,
+                isWeekend: sched.isWeekend,
+                operatingHours: sched.operatingHoursText
             });
         }
         return dates;
@@ -102,6 +145,7 @@ const BookingService = (function () {
 
     /**
      * Generate standard 75-min slots for a given date
+     * Automatically applies Friday-Sunday (5 AM - 2 AM) vs Monday-Thursday (6:30 AM - Midnight)
      */
     function generateStandardSlotsForDate(dateStr) {
         if (!dateStr || typeof dateStr !== 'string') {
@@ -112,13 +156,16 @@ const BookingService = (function () {
             dateStr = `${yyyy}-${mm}-${dd}`;
         }
 
+        const schedule = getScheduleForDate(dateStr);
         const slots = [];
         const now = new Date();
         const [year, month, day] = dateStr.split('-').map(Number);
 
-        STANDARD_SLOT_STARTS.forEach((startStr, index) => {
+        schedule.slotStarts.forEach((startStr, index) => {
             const [hours, mins] = startStr.split(':').map(Number);
-            const startObj = new Date(year, (month || 1) - 1, day || 1, hours, mins, 0, 0);
+            // On weekend schedule, slots with hours < 5 (e.g. 01:00 AM) occur on the following morning
+            const dayOffset = (schedule.isWeekend && hours < 5) ? 1 : 0;
+            const startObj = new Date(year, (month || 1) - 1, (day || 1) + dayOffset, hours, mins, 0, 0);
             const endObj = new Date(startObj.getTime() + SLOT_DURATION_MINUTES * 60 * 1000);
 
             const endHours = String(endObj.getHours()).padStart(2, '0');
@@ -126,6 +173,7 @@ const BookingService = (function () {
             const endStr = `${endHours}:${endMins}`;
 
             const isPast = startObj < now;
+            const labelSuffix = dayOffset ? ' (Next Day)' : '';
 
             slots.push({
                 slotIndex: index + 1,
@@ -133,8 +181,9 @@ const BookingService = (function () {
                 endTime: endStr,
                 startISO: startObj.toISOString(),
                 endISO: endObj.toISOString(),
-                label: `${formatTime12h(startStr)} - ${formatTime12h(endStr)}`,
+                label: `${formatTime12h(startStr)} - ${formatTime12h(endStr)}${labelSuffix}`,
                 isPast,
+                isNextDay: Boolean(dayOffset),
                 durationMinutes: SLOT_DURATION_MINUTES
             });
         });
@@ -190,23 +239,24 @@ const BookingService = (function () {
     /**
      * Get slot availability for a machine on a given date
      * Ensures student privacy: doesn't return student roll, phone, or email to students
+     * Also fetches administrator slot overrides (disabled/blocked slots)
      */
     async function getMachineSlotAvailability(machineId, dateStr, currentMachineInfo = null) {
         const standardSlots = generateStandardSlotsForDate(dateStr);
         const client = window.SupabaseManager.getClient();
 
         let bookings = [];
+        let disabledSlotStarts = [];
 
         if (client) {
+            // 1. Fetch live bookings (Shielded)
             try {
-                // Try Privacy-Preserving RPC first
                 const { data: rpcData, error: rpcError } = await client
                     .rpc('get_public_machine_slots', { p_date: dateStr });
 
                 if (!rpcError && Array.isArray(rpcData)) {
                     bookings = rpcData.filter(b => b.machine_id === Number(machineId));
                 } else {
-                    // Fallback to direct select of non-sensitive columns
                     const { data: directData, error: directError } = await client
                         .from('bookings')
                         .select('id, machine_id, booking_date, start_time, end_time, status')
@@ -223,6 +273,28 @@ const BookingService = (function () {
             } catch (e) {
                 console.warn('Could not query remote bookings, checking local storage:', e);
                 bookings = getLocalBookings(machineId, dateStr);
+            }
+
+            // 2. Fetch admin slot overrides for this date
+            try {
+                const { data: overrides, error: ovErr } = await client
+                    .from('slot_overrides')
+                    .select('slot_start, machine_id, is_disabled, reason')
+                    .eq('slot_date', dateStr)
+                    .eq('is_disabled', true);
+
+                if (!ovErr && Array.isArray(overrides)) {
+                    overrides.forEach(ov => {
+                        if (ov.machine_id === null || Number(ov.machine_id) === Number(machineId)) {
+                            disabledSlotStarts.push({
+                                slotStart: ov.slot_start,
+                                reason: ov.reason || 'Blocked by Administrator'
+                            });
+                        }
+                    });
+                }
+            } catch (ovEx) {
+                console.warn('Slot overrides query failed:', ovEx);
             }
         } else {
             bookings = getLocalBookings(machineId, dateStr);
@@ -243,6 +315,9 @@ const BookingService = (function () {
             const slotStartMs = new Date(slot.startISO).getTime();
             const slotEndMs = new Date(slot.endISO).getTime();
 
+            // Check if slot was disabled by hostel administrator
+            const matchedDisabled = disabledSlotStarts.find(d => d.slotStart === slot.startTime);
+
             // Check if any confirmed/in_progress booking overlaps
             const matchedBooking = bookings.find(b => {
                 if (b.status === 'cancelled') return false;
@@ -253,7 +328,12 @@ const BookingService = (function () {
             });
 
             let status = 'available';
-            if (isNotYetActive) {
+            let blockReason = '';
+
+            if (matchedDisabled) {
+                status = 'disabled';
+                blockReason = matchedDisabled.reason;
+            } else if (isNotYetActive) {
                 status = 'offline';
             } else if (isHardOffline) {
                 status = machineInfo.status;
@@ -267,6 +347,8 @@ const BookingService = (function () {
                 ...slot,
                 status,
                 isAvailable: status === 'available',
+                isDisabledByAdmin: Boolean(matchedDisabled),
+                blockReason,
                 bookingId: matchedBooking ? matchedBooking.id : null
             };
         });
@@ -345,7 +427,8 @@ const BookingService = (function () {
                     p_student_roll: studentRoll.trim(),
                     p_student_phone: studentPhone.trim(),
                     p_student_email: (studentEmail || '').trim(),
-                    p_start_time: startObj.toISOString()
+                    p_start_time: startObj.toISOString(),
+                    p_booking_date: dateStr
                 });
 
                 if (rpcError) {
@@ -475,6 +558,10 @@ const BookingService = (function () {
 
         if (msg.includes('WINDOW_LIMIT_EXCEEDED') || msg.includes('PAST_DATE_ERROR')) {
             throw new Error('DATE WINDOW ERROR: Bookings are only permitted for today and the next 6 days.');
+        }
+
+        if (msg.includes('SLOT_DISABLED_BY_ADMIN')) {
+            throw new Error('SLOT UNAVAILABLE: This slot has been disabled by the hostel administrator. Please choose another slot.');
         }
 
         if (msg.includes('MACHINE_MAINTENANCE') || msg.includes('MACHINE_OFFLINE')) {
@@ -669,7 +756,10 @@ const BookingService = (function () {
     return {
         SLOT_DURATION_MINUTES,
         STANDARD_SLOT_STARTS,
+        WEEKDAY_SLOT_STARTS,
+        WEEKEND_SLOT_STARTS,
         getBookingDateRange,
+        getScheduleForDate,
         generateStandardSlotsForDate,
         getMachines,
         getMachineSlotAvailability,

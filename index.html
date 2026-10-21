@@ -173,6 +173,7 @@
                         <line x1="3" y1="10" x2="21" y2="10"></line>
                     </svg>
                     <span>Select Booking Date (Today & Next 6 Days)</span>
+                    <span id="date-schedule-pill" style="margin-left: 8px; font-size: 0.72rem; background: var(--primary-light); color: var(--primary-color); padding: 3px 8px; border-radius: 4px; font-weight: 700;"></span>
                 </div>
                 <div class="calendar-picker-box">
                     <label for="booking-calendar-input" class="calendar-picker-label">
@@ -229,9 +230,12 @@
                 <button type="button" class="modal-close-btn" data-close="booking-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <div style="background-color: var(--primary-light); padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.85rem; color: var(--primary-color); font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                    <span>ℹ️</span>
-                    <span>Slots are strictly 75 minutes. Overlap is strictly prevented by PostgreSQL database constraints.</span>
+                <div style="background-color: var(--primary-light); padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.85rem; color: var(--primary-color); font-weight: 600; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span>ℹ️</span>
+                        <span>Slots are strictly 75 minutes. Overlap is strictly prevented by PostgreSQL database constraints.</span>
+                    </div>
+                    <span id="bm-schedule-badge" style="font-size: 0.76rem; font-weight: 700; background: #ffffff; color: var(--primary-color); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border-color);"></span>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
@@ -441,6 +445,7 @@
                 <div class="admin-tabs">
                     <button type="button" class="admin-tab-btn active" data-tab="tab-manage-machines">Machine Status & Photos</button>
                     <button type="button" class="admin-tab-btn" data-tab="tab-manage-bookings">Manage Bookings</button>
+                    <button type="button" class="admin-tab-btn" data-tab="tab-manage-slots">🗓️ Manage Slots</button>
                     <button type="button" class="admin-tab-btn" data-tab="tab-notice-board">📢 Notice Board (Notepad)</button>
                     <button type="button" class="admin-tab-btn" data-tab="tab-pdf-reports">Date-Wise PDF Reports</button>
                     <button type="button" class="admin-tab-btn" data-tab="tab-audit-logs">🛡️ Audit Logs</button>
@@ -488,7 +493,52 @@
                     </div>
                 </div>
 
-                <!-- TAB 3: Date-Wise PDF Report Downloader -->
+                <!-- TAB 3: Manage Slots & Operational Schedule -->
+                <div id="tab-manage-slots" class="admin-tab-content" style="display: none;">
+                    <div style="background-color: var(--bg-primary); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 2px;">🗓️ Manage Operational Slots & Schedule</h4>
+                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0;">
+                                    Enable or disable slots for all or individual machines (e.g., water maintenance, early shutdown, holidays).
+                                </p>
+                            </div>
+                            <div id="admin-schedule-badge" style="padding: 6px 12px; font-size: 0.82rem; font-weight: 700; background: var(--primary-light); color: var(--primary-color); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                Schedule Details
+                            </div>
+                        </div>
+
+                        <!-- Slot Controls Bar -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: var(--bg-card); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Manage Date</label>
+                                <input type="date" id="admin-slots-date-picker" class="form-input">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Machine Filter</label>
+                                <select id="admin-slots-machine-filter" class="form-select">
+                                    <option value="all">All 4 Machines</option>
+                                    <option value="1">Machine 1 (Bay 1)</option>
+                                    <option value="2">Machine 2 (Bay 2)</option>
+                                    <option value="3">Machine 3 (Bay 3)</option>
+                                    <option value="4">Machine 4 (Bay 4)</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0; display: flex; align-items: flex-end;">
+                                <button type="button" id="btn-refresh-admin-slots" class="btn btn-secondary" style="width: 100%;">
+                                    🔄 Refresh Slots
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Slots Grid -->
+                        <div id="admin-slots-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; max-height: 420px; overflow-y: auto; padding: 4px;">
+                            <!-- Rendered by script.js -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: Date-Wise PDF Report Downloader -->
                 <div id="tab-pdf-reports" class="admin-tab-content" style="display: none;">
                     <div style="background-color: var(--bg-primary); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 14px;">
                         <h4 style="font-size: 1rem; font-weight: 700;">Generate Official Daily Facility Report (PDF)</h4>

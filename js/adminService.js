@@ -674,6 +674,120 @@ const AdminService = (function () {
         return [];
     }
 
+    /**
+     * Get admin slot overrides for a date (Admin only)
+     */
+    async function getSlotOverrides(dateStr) {
+        if (!isAuthenticated()) {
+            throw new Error('UNAUTHORIZED: Only authenticated admins can manage slots.');
+        }
+
+        const client = window.SupabaseManager.getClient();
+        if (client) {
+            try {
+                const { data, error } = await client
+                    .from('slot_overrides')
+                    .select('*')
+                    .eq('slot_date', dateStr);
+
+                if (!error && Array.isArray(data)) {
+                    return data;
+                }
+            } catch (e) {
+                console.warn('Failed to fetch slot overrides:', e);
+            }
+        }
+        return [];
+    }
+
+    /**
+     * Enable or Disable a 75-minute operational slot (Admin only)
+     */
+    async function toggleSlotOverride({ slotDate, slotStart, machineId = null, disable = true, reason = '' }) {
+        if (!isAuthenticated()) {
+            throw new Error('UNAUTHORIZED: Only authenticated admins can manage slots.');
+        }
+
+        const client = window.SupabaseManager.getClient();
+        if (!client) throw new Error('Database connection not established.');
+
+        const machineIdVal = machineId && machineId !== 'all' ? Number(machineId) : null;
+        const currentEmail = currentAdminUser?.email || 'admin';
+
+        if (disable) {
+            // Delete existing override for this exact slot & machine scope first to prevent duplicates
+            let delQuery = client
+                .from('slot_overrides')
+                .delete()
+                .eq('slot_date', slotDate)
+                .eq('slot_start', slotStart);
+
+            if (machineIdVal !== null) {
+                delQuery = delQuery.eq('machine_id', machineIdVal);
+            } else {
+                delQuery = delQuery.is('machine_id', null);
+            }
+            await delQuery;
+
+            const { error: insErr } = await client
+                .from('slot_overrides')
+                .insert([{
+                    slot_date: slotDate,
+                    slot_start: slotStart,
+                    machine_id: machineIdVal,
+                    is_disabled: true,
+                    reason: reason || 'Slot disabled by hostel administrator',
+                    updated_at: new Date().toISOString(),
+                    updated_by: currentEmail
+                }]);
+
+            if (insErr) {
+                throw new Error('Failed to disable slot: ' + insErr.message);
+            }
+
+            // Log to audit trail
+            try {
+                await client.from('audit_logs').insert([{
+                    action: 'SLOT_DISABLED',
+                    performed_by: currentEmail,
+                    target_id: `${slotDate}_${slotStart}`,
+                    details: { slot_date: slotDate, slot_start: slotStart, machine_id: machineIdVal, reason }
+                }]);
+            } catch (e) {}
+
+        } else {
+            // Re-enable slot: delete override
+            let query = client
+                .from('slot_overrides')
+                .delete()
+                .eq('slot_date', slotDate)
+                .eq('slot_start', slotStart);
+
+            if (machineIdVal !== null) {
+                query = query.eq('machine_id', machineIdVal);
+            } else {
+                query = query.is('machine_id', null);
+            }
+
+            const { error: delErr } = await query;
+            if (delErr) {
+                throw new Error('Failed to enable slot: ' + delErr.message);
+            }
+
+            // Log to audit trail
+            try {
+                await client.from('audit_logs').insert([{
+                    action: 'SLOT_ENABLED',
+                    performed_by: currentEmail,
+                    target_id: `${slotDate}_${slotStart}`,
+                    details: { slot_date: slotDate, slot_start: slotStart, machine_id: machineIdVal }
+                }]);
+            } catch (e) {}
+        }
+
+        return true;
+    }
+
     return {
         initAuth,
         onAuthStateChange,
@@ -689,7 +803,9 @@ const AdminService = (function () {
         getNotice,
         saveNotice,
         clearNotice,
-        getAuditLogs
+        getAuditLogs,
+        getSlotOverrides,
+        toggleSlotOverride
     };
 })();
 

@@ -1085,6 +1085,23 @@ body {
     cursor: not-allowed;
 }
 
+.slot-selection-card.disabled {
+    background-color: var(--busy-light);
+    border: 1.5px dashed var(--busy-color);
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+
+.slot-selection-card.disabled .slot-time-text {
+    color: var(--busy-color);
+    text-decoration: line-through;
+}
+
+.slot-selection-card.disabled .slot-status-text {
+    color: var(--busy-color);
+    font-weight: 700;
+}
+
 .slot-time-text {
     font-size: 0.85rem;
     font-weight: 700;

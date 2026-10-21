@@ -84,6 +84,13 @@
         elements.pdfReportMachineFilter = document.getElementById('pdf-report-machine-filter');
         elements.adminAuditLogsTbody = document.getElementById('admin-audit-logs-tbody');
         elements.btnRefreshAuditLogs = document.getElementById('btn-refresh-audit-logs');
+        elements.adminScheduleBadge = document.getElementById('admin-schedule-badge');
+        elements.adminSlotsDatePicker = document.getElementById('admin-slots-date-picker');
+        elements.adminSlotsMachineFilter = document.getElementById('admin-slots-machine-filter');
+        elements.adminSlotsGridContainer = document.getElementById('admin-slots-grid-container');
+        elements.btnRefreshAdminSlots = document.getElementById('btn-refresh-admin-slots');
+        elements.dateSchedulePill = document.getElementById('date-schedule-pill');
+        elements.bmScheduleBadge = document.getElementById('bm-schedule-badge');
 
         // Setup Modal Fields
         elements.setupSupabaseUrl = document.getElementById('setup-supabase-url');
@@ -239,6 +246,7 @@
         // Default to today
         state.selectedDateStr = dateRange[0].dateStr;
         state.selectedDateObj = dateRange[0].dateObj;
+        updateDateScheduleBadge(state.selectedDateStr);
 
         if (elements.bookingCalendarInput) {
             elements.bookingCalendarInput.value = state.selectedDateStr;
@@ -253,6 +261,7 @@
 
                 state.selectedDateStr = selected;
                 state.selectedDateObj = new Date(`${selected}T00:00:00`);
+                updateDateScheduleBadge(selected);
 
                 let matched = false;
                 document.querySelectorAll('.date-pill').forEach(p => {
@@ -280,6 +289,7 @@
                         document.querySelectorAll('.date-pill').forEach(p => p.classList.remove('active'));
                         customPill.classList.add('active');
                         state.selectedDateStr = selected;
+                        updateDateScheduleBadge(selected);
                         if (elements.bookingCalendarInput) elements.bookingCalendarInput.value = selected;
                         renderMachineCards();
                     });
@@ -306,6 +316,7 @@
                 pill.classList.add('active');
                 state.selectedDateStr = item.dateStr;
                 state.selectedDateObj = item.dateObj;
+                updateDateScheduleBadge(item.dateStr);
                 if (elements.bookingCalendarInput) {
                     elements.bookingCalendarInput.value = item.dateStr;
                 }
@@ -314,6 +325,12 @@
 
             elements.datePillsBar.appendChild(pill);
         });
+    }
+
+    function updateDateScheduleBadge(dateStr) {
+        if (!elements.dateSchedulePill) return;
+        const sched = window.BookingService.getScheduleForDate(dateStr);
+        elements.dateSchedulePill.textContent = `${sched.dayName}: ${sched.operatingHoursText}`;
     }
 
     /**
@@ -653,6 +670,11 @@
         elements.bmSlotSummaryText.textContent = 'Please choose an available 75-minute slot:';
         elements.btnConfirmBooking.disabled = true;
 
+        if (elements.bmScheduleBadge) {
+            const sched = window.BookingService.getScheduleForDate(state.selectedDateStr);
+            elements.bmScheduleBadge.textContent = `${sched.name}: ${sched.operatingHoursText}`;
+        }
+
         // Fetch slots
         elements.bmSlotsGrid.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-muted); padding: 10px;">Loading real-time slot availability...</p>';
         openModal(elements.bookingModal);
@@ -666,9 +688,15 @@
             card.dataset.startIso = slot.startISO;
             card.dataset.endIso = slot.endISO;
 
+            let statusLabel = slot.status.toUpperCase();
+            if (slot.status === 'disabled') {
+                statusLabel = 'BLOCKED BY ADMIN';
+                if (slot.blockReason) card.title = `Admin Notice: ${slot.blockReason}`;
+            }
+
             card.innerHTML = `
                 <span class="slot-time-text">${slot.label}</span>
-                <span class="slot-status-text">${slot.status.toUpperCase()}</span>
+                <span class="slot-status-text">${statusLabel}</span>
             `;
 
             if (slot.status === 'available') {
@@ -899,6 +927,8 @@
 
                 if (tabBtn.dataset.tab === 'tab-manage-bookings') {
                     loadAdminBookings();
+                } else if (tabBtn.dataset.tab === 'tab-manage-slots') {
+                    loadAdminSlotControls();
                 } else if (tabBtn.dataset.tab === 'tab-notice-board') {
                     renderNoticeBoard();
                 } else if (tabBtn.dataset.tab === 'tab-audit-logs') {
@@ -909,6 +939,16 @@
 
         if (elements.btnRefreshAuditLogs) {
             elements.btnRefreshAuditLogs.addEventListener('click', loadAuditLogs);
+        }
+
+        if (elements.adminSlotsDatePicker) {
+            elements.adminSlotsDatePicker.addEventListener('change', loadAdminSlotControls);
+        }
+        if (elements.adminSlotsMachineFilter) {
+            elements.adminSlotsMachineFilter.addEventListener('change', loadAdminSlotControls);
+        }
+        if (elements.btnRefreshAdminSlots) {
+            elements.btnRefreshAdminSlots.addEventListener('click', loadAdminSlotControls);
         }
 
         // Admin Bookings Filters
@@ -969,6 +1009,7 @@
         openModal(elements.adminDashboardModal);
         renderAdminMachineControls();
         loadAdminBookings();
+        loadAdminSlotControls();
     }
 
     function renderAdminMachineControls() {
@@ -1149,6 +1190,142 @@
             });
         } catch (err) {
             elements.adminBookingsTbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 16px; color: var(--busy-color);">${err.message}</td></tr>`;
+        }
+    }
+
+    /**
+     * Load Admin Slot Controls & Override Management
+     */
+    async function loadAdminSlotControls() {
+        if (!elements.adminSlotsGridContainer) return;
+
+        const dateStr = (elements.adminSlotsDatePicker && elements.adminSlotsDatePicker.value) || state.selectedDateStr;
+        if (elements.adminSlotsDatePicker) elements.adminSlotsDatePicker.value = dateStr;
+        const machineFilter = (elements.adminSlotsMachineFilter && elements.adminSlotsMachineFilter.value) || 'all';
+
+        const schedule = window.BookingService.getScheduleForDate(dateStr);
+        if (elements.adminScheduleBadge) {
+            elements.adminScheduleBadge.innerHTML = `<strong>${schedule.dayName}</strong>: ${schedule.operatingHoursText} (${schedule.totalSlots} Slots)`;
+        }
+
+        elements.adminSlotsGridContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 20px;">Loading operational slots...</p>';
+
+        try {
+            // 1. Generate base slots for this date
+            const standardSlots = window.BookingService.generateStandardSlotsForDate(dateStr);
+
+            // 2. Fetch overrides
+            const overrides = await window.AdminService.getSlotOverrides(dateStr);
+
+            // 3. Fetch existing bookings for this date
+            const bookings = await window.BookingService.getAllBookingsForDate(dateStr);
+
+            elements.adminSlotsGridContainer.innerHTML = '';
+
+            standardSlots.forEach(slot => {
+                // Check if disabled for chosen filter
+                const matchedOverride = overrides.find(ov => {
+                    if (ov.slot_start !== slot.startTime || !ov.is_disabled) return false;
+                    if (machineFilter === 'all') return ov.machine_id === null;
+                    return ov.machine_id === null || Number(ov.machine_id) === Number(machineFilter);
+                });
+
+                const isBlocked = Boolean(matchedOverride);
+
+                // Count active bookings in this slot
+                const slotBookings = bookings.filter(b => {
+                    if (b.status === 'cancelled') return false;
+                    if (machineFilter !== 'all' && Number(b.machine_id) !== Number(machineFilter)) return false;
+                    const bStart = new Date(b.start_time).getTime();
+                    const bEnd = new Date(b.end_time).getTime();
+                    const sStart = new Date(slot.startISO).getTime();
+                    const sEnd = new Date(slot.endISO).getTime();
+                    return bStart < sEnd && bEnd > sStart;
+                });
+
+                const card = document.createElement('div');
+                card.style.cssText = `
+                    background: var(--bg-card);
+                    border: 1.5px solid ${isBlocked ? 'var(--busy-color)' : 'var(--border-color)'};
+                    border-radius: var(--radius-md);
+                    padding: 12px 14px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    box-shadow: var(--shadow-sm);
+                `;
+
+                let statusBadgeHtml = '';
+                if (isBlocked) {
+                    statusBadgeHtml = `<span style="font-size: 0.72rem; font-weight: 700; color: #ffffff; background: var(--busy-color); padding: 2px 8px; border-radius: 4px;">BLOCKED BY ADMIN</span>`;
+                } else if (slotBookings.length > 0) {
+                    statusBadgeHtml = `<span style="font-size: 0.72rem; font-weight: 700; color: var(--busy-color); background: var(--busy-light); padding: 2px 8px; border-radius: 4px;">${slotBookings.length} BOOKED</span>`;
+                } else {
+                    statusBadgeHtml = `<span style="font-size: 0.72rem; font-weight: 700; color: var(--available-color); background: var(--available-light); padding: 2px 8px; border-radius: 4px;">AVAILABLE</span>`;
+                }
+
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 700; font-size: 0.88rem;">${slot.label}</span>
+                        ${statusBadgeHtml}
+                    </div>
+                    <div style="font-size: 0.76rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                        <span>Slot #${slot.slotIndex} (75m)</span>
+                        <span>Scope: ${machineFilter === 'all' ? 'All 4 Machines' : `Machine ${machineFilter}`}</span>
+                    </div>
+                    ${isBlocked && matchedOverride.reason ? `<div style="font-size: 0.72rem; color: var(--busy-color); font-style: italic;">Reason: ${matchedOverride.reason}</div>` : ''}
+                    <div style="margin-top: 4px;">
+                        ${isBlocked ? `
+                            <button type="button" class="btn btn-secondary btn-toggle-slot" data-slot="${slot.startTime}" data-action="enable" style="width: 100%; padding: 6px; font-size: 0.78rem;">
+                                ✅ Enable Slot
+                            </button>
+                        ` : `
+                            <button type="button" class="btn btn-danger btn-toggle-slot" data-slot="${slot.startTime}" data-action="disable" style="width: 100%; padding: 6px; font-size: 0.78rem;">
+                                🚫 Block Slot
+                            </button>
+                        `}
+                    </div>
+                `;
+
+                elements.adminSlotsGridContainer.appendChild(card);
+            });
+
+            // Attach toggle handlers
+            elements.adminSlotsGridContainer.querySelectorAll('.btn-toggle-slot').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const slotStart = btn.dataset.slot;
+                    const action = btn.dataset.action;
+                    const isDisable = action === 'disable';
+
+                    let reason = '';
+                    if (isDisable) {
+                        reason = prompt(`Enter reason for blocking slot ${slotStart} (e.g. water maintenance, cleaning):`, 'Hostel Laundry Maintenance') || 'Blocked by Administrator';
+                    }
+
+                    btn.disabled = true;
+                    btn.textContent = isDisable ? 'Blocking...' : 'Enabling...';
+
+                    try {
+                        await window.AdminService.toggleSlotOverride({
+                            slotDate: dateStr,
+                            slotStart,
+                            machineId: machineFilter,
+                            disable: isDisable,
+                            reason
+                        });
+                        showToast(`Slot ${slotStart} ${isDisable ? 'blocked' : 'enabled'} successfully.`, 'success');
+                        loadAdminSlotControls();
+                        reloadMachines();
+                    } catch (err) {
+                        showToast(err.message, 'error');
+                        btn.disabled = false;
+                        btn.textContent = isDisable ? '🚫 Block Slot' : '✅ Enable Slot';
+                    }
+                });
+            });
+
+        } catch (e) {
+            elements.adminSlotsGridContainer.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--busy-color); padding: 16px;">Failed to load slots: ${e.message}</p>`;
         }
     }
 
