@@ -469,9 +469,14 @@
 
                 <!-- TAB 2: Bookings Management -->
                 <div id="tab-manage-bookings" class="admin-tab-content" style="display: none;">
-                    <div style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
-                        <input type="date" id="admin-bookings-date-filter" class="form-input" style="flex: 1; min-width: 160px;">
-                        <select id="admin-bookings-machine-filter" class="form-select" style="flex: 1; min-width: 160px;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center;">
+                        <div style="display: flex; gap: 6px; flex: 1; min-width: 250px; align-items: center;">
+                            <input type="date" id="admin-bookings-date-filter" class="form-input" style="flex: 1;" title="Filter by specific date">
+                            <button type="button" id="btn-admin-clear-date" class="btn btn-secondary" title="सर्व तारखा पहा (Show All Dates)" style="padding: 6px 12px; font-size: 0.8rem; white-space: nowrap;">
+                                सर्व तारखा (All)
+                            </button>
+                        </div>
+                        <select id="admin-bookings-machine-filter" class="form-select" style="flex: 1; min-width: 150px;">
                             <option value="all">All 4 Machines</option>
                             <option value="1">Machine 1</option>
                             <option value="2">Machine 2</option>
@@ -485,6 +490,7 @@
                             <thead>
                                 <tr>
                                     <th>Ref</th>
+                                    <th>Date</th>
                                     <th>Machine</th>
                                     <th>Time Slot</th>
                                     <th>Student Name</th>

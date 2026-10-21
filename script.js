@@ -78,6 +78,7 @@
         elements.adminMachinesList = document.getElementById('admin-machines-list');
         elements.adminBookingsTbody = document.getElementById('admin-bookings-tbody');
         elements.adminBookingsDateFilter = document.getElementById('admin-bookings-date-filter');
+        elements.btnAdminClearDate = document.getElementById('btn-admin-clear-date');
         elements.adminBookingsMachineFilter = document.getElementById('admin-bookings-machine-filter');
         elements.adminBookingsSearch = document.getElementById('admin-bookings-search');
         elements.btnDownloadPdfReport = document.getElementById('btn-download-pdf-report');
@@ -1193,11 +1194,17 @@
             elements.btnRefreshAdminSlots.addEventListener('click', loadAdminSlotControls);
         }
 
-        // Admin Bookings Filters
-        elements.adminBookingsDateFilter.value = state.selectedDateStr;
+        // Admin Bookings Filters - start with all dates so warden can see all bookings
+        elements.adminBookingsDateFilter.value = '';
         elements.pdfReportDate.value = state.selectedDateStr;
 
         elements.adminBookingsDateFilter.addEventListener('change', loadAdminBookings);
+        if (elements.btnAdminClearDate) {
+            elements.btnAdminClearDate.addEventListener('click', () => {
+                elements.adminBookingsDateFilter.value = '';
+                loadAdminBookings();
+            });
+        }
         elements.adminBookingsMachineFilter.addEventListener('change', loadAdminBookings);
         elements.adminBookingsSearch.addEventListener('input', debounce(loadAdminBookings, 300));
 
@@ -1372,7 +1379,7 @@
         const machineFilter = elements.adminBookingsMachineFilter.value;
         const searchStr = elements.adminBookingsSearch.value;
 
-        elements.adminBookingsTbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 16px;">Loading bookings...</td></tr>';
+        elements.adminBookingsTbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding: 16px;">Loading bookings...</td></tr>';
 
         try {
             const bookings = await window.AdminService.getAllBookings({
@@ -1384,7 +1391,7 @@
             elements.adminBookingsTbody.innerHTML = '';
 
             if (bookings.length === 0) {
-                elements.adminBookingsTbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--text-muted);">No bookings found matching filters.</td></tr>';
+                elements.adminBookingsTbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding: 20px; color: var(--text-muted);">No bookings found matching filters.</td></tr>';
                 return;
             }
 
@@ -1392,10 +1399,12 @@
                 const start = new Date(b.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 const end = new Date(b.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 const machineName = b.machines?.name || `Machine ${b.machine_id}`;
+                const bookingDateDisplay = b.booking_date || '';
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong>${b.reference_code}</strong></td>
+                    <td><span style="font-size: 0.82rem; font-weight: 600; color: var(--primary);">${bookingDateDisplay}</span></td>
                     <td>${machineName}</td>
                     <td>${start} - ${end}</td>
                     <td>${b.student_name}</td>
