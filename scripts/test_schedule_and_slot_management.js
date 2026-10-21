@@ -46,11 +46,11 @@ async function runTests() {
     console.log('>>> PASSED: Friday, Saturday, Sunday schedule verified (5:00 AM to 2:00 AM next day, 17 slots) <<<\n');
 
     // -------------------------------------------------------------
-    // TEST 3: Student Booking on Friday Morning without Login
+    // TEST 3: Student Booking on Weekend Morning without Login
     // -------------------------------------------------------------
-    console.log('Test 3: Student creates booking on Friday 05:00 AM slot without login...');
-    // Friday 2026-10-23 05:00 AM IST is 2026-10-22T23:30:00Z
-    const fridaySlotISO = '2026-10-22T23:30:00Z';
+    console.log('Test 3: Student creates booking on Sunday 05:00 AM slot without login...');
+    // Sunday 2026-10-25 05:00 AM IST is 2026-10-24T23:30:00Z
+    const sundaySlotISO = '2026-10-24T23:30:00Z';
     const bookRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/book_washing_machine`, {
         method: 'POST',
         headers: anonHeaders,
@@ -60,15 +60,15 @@ async function runTests() {
             p_student_roll: 'W-101',
             p_student_phone: '9876543210',
             p_student_email: 'weekend@test.com',
-            p_start_time: fridaySlotISO,
-            p_booking_date: '2026-10-23'
+            p_start_time: sundaySlotISO,
+            p_booking_date: '2026-10-25'
         })
     });
     const bookData = await bookRes.json();
     console.log('Booking response:', bookData.message, 'Ref:', bookData.reference_code);
     if (!bookData.success) throw new Error('Student weekend booking failed: ' + JSON.stringify(bookData));
     const testBookingId = bookData.booking_id;
-    console.log('>>> PASSED: Public student booking succeeds for Friday 5:00 AM slot! <<<\n');
+    console.log('>>> PASSED: Public student booking succeeds for Sunday 5:00 AM slot! <<<\n');
 
     // -------------------------------------------------------------
     // TEST 4: Prevent Double Booking (Database Validation)
@@ -83,8 +83,8 @@ async function runTests() {
             p_student_roll: 'W-999',
             p_student_phone: '9876543211',
             p_student_email: 'intruder@test.com',
-            p_start_time: '2026-10-23T00:00:00Z', // 30 minutes into the slot
-            p_booking_date: '2026-10-23'
+            p_start_time: '2026-10-25T00:00:00Z', // 30 minutes into the slot
+            p_booking_date: '2026-10-25'
         })
     });
     const duplicateData = await duplicateRes.json();
@@ -121,12 +121,12 @@ async function runTests() {
     // -------------------------------------------------------------
     // TEST 6: Admin Blocks an Available Slot
     // -------------------------------------------------------------
-    console.log('Test 6: Admin blocks 07:30 slot on Friday for Machine 2...');
+    console.log('Test 6: Admin blocks 07:30 slot on Sunday for Machine 2...');
     const blockRes = await fetch(`${SUPABASE_URL}/rest/v1/slot_overrides`, {
         method: 'POST',
         headers: adminHeaders,
         body: JSON.stringify({
-            slot_date: '2026-10-23',
+            slot_date: '2026-10-25',
             slot_start: '07:30',
             machine_id: 2,
             is_disabled: true,
@@ -144,7 +144,7 @@ async function runTests() {
     // TEST 7: Student Attempts to Book Blocked Slot (Server-Side Block)
     // -------------------------------------------------------------
     console.log('Test 7: Student attempts to book the admin-blocked 07:30 slot...');
-    // Friday 07:30 AM IST is 2026-10-23T02:00:00Z
+    // Sunday 07:30 AM IST is 2026-10-25T02:00:00Z
     const blockedRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/book_washing_machine`, {
         method: 'POST',
         headers: anonHeaders,
@@ -154,8 +154,8 @@ async function runTests() {
             p_student_roll: 'W-202',
             p_student_phone: '9876543212',
             p_student_email: 'hopeful@test.com',
-            p_start_time: '2026-10-23T02:00:00Z',
-            p_booking_date: '2026-10-23'
+            p_start_time: '2026-10-25T02:00:00Z',
+            p_booking_date: '2026-10-25'
         })
     });
     const blockedData = await blockedRes.json();
@@ -185,8 +185,8 @@ async function runTests() {
             p_student_roll: 'W-202',
             p_student_phone: '9876543212',
             p_student_email: 'hopeful@test.com',
-            p_start_time: '2026-10-23T02:00:00Z',
-            p_booking_date: '2026-10-23'
+            p_start_time: '2026-10-25T02:00:00Z',
+            p_booking_date: '2026-10-25'
         })
     });
     const rebookData = await rebookRes.json();

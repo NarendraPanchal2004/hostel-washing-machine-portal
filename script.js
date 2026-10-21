@@ -67,6 +67,7 @@
         elements.bmStudentPhone = document.getElementById('bm-student-phone');
         elements.bmStudentEmail = document.getElementById('bm-student-email');
         elements.btnConfirmBooking = document.getElementById('btn-confirm-booking');
+        elements.btnSaveTicketGallery = document.getElementById('btn-save-ticket-gallery');
 
         // Admin Fields
         elements.btnSubmitAdminLogin = document.getElementById('btn-submit-admin-login');
@@ -783,22 +784,263 @@
      * Digital Pass Modal Display
      */
     function openPassModal(bookingData) {
+        state.currentPassData = bookingData;
         const passRef = document.getElementById('pass-ref-code');
         const passMachine = document.getElementById('pass-machine-title');
         const passStudent = document.getElementById('pass-student-name');
         const passDate = document.getElementById('pass-date');
         const passSlotTime = document.getElementById('pass-slot-time');
 
-        passRef.textContent = bookingData.reference_code;
+        passRef.textContent = bookingData.reference_code || '-';
         passMachine.textContent = bookingData.machine_name || `Washing Machine ${bookingData.machine_id}`;
-        passStudent.textContent = bookingData.student_name;
-        passDate.textContent = bookingData.booking_date;
+        passStudent.textContent = bookingData.student_name || '-';
+        passDate.textContent = bookingData.booking_date || '-';
 
-        const start = new Date(bookingData.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const end = new Date(bookingData.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        passSlotTime.textContent = `${start} - ${end} (75 Mins)`;
+        const start = bookingData.start_time ? new Date(bookingData.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        const end = bookingData.end_time ? new Date(bookingData.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        passSlotTime.textContent = start && end ? `${start} - ${end} (75 Mins)` : '-';
 
         openModal(elements.passModal);
+    }
+
+    /**
+     * Generate & Save High-Resolution Ticket directly to Phone Gallery / Downloads
+     */
+    async function saveTicketToGallery(bookingData) {
+        if (!bookingData) return;
+
+        showToast('Generating HD ticket for your gallery...', 'info');
+
+        try {
+            const canvas = document.createElement('canvas');
+            const scale = 2; // Retina sharpness
+            const width = 600;
+            const height = 780;
+            canvas.width = width * scale;
+            canvas.height = height * scale;
+
+            const ctx = canvas.getContext('2d');
+            ctx.scale(scale, scale);
+
+            // 1. Background gradient (Rich indigo dark theme)
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+            bgGrad.addColorStop(0, '#0f172a');
+            bgGrad.addColorStop(1, '#1e1b4b');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, width, height);
+
+            // 2. Ticket Card inner container (White card with rounded corners)
+            const cardX = 24;
+            const cardY = 24;
+            const cardW = width - 48;
+            const cardH = height - 48;
+            const radius = 18;
+
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = 'rgba(0,0,0,0.35)';
+            ctx.shadowBlur = 24;
+            ctx.shadowOffsetY = 12;
+            roundRect(ctx, cardX, cardY, cardW, cardH, radius);
+            ctx.fill();
+            ctx.restore();
+
+            // 3. Header Banner (Gradient Indigo)
+            ctx.save();
+            const headerH = 124;
+            const headerGrad = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY);
+            headerGrad.addColorStop(0, '#4f46e5');
+            headerGrad.addColorStop(1, '#6366f1');
+            ctx.fillStyle = headerGrad;
+
+            // Clip top rounded corners
+            ctx.beginPath();
+            ctx.moveTo(cardX + radius, cardY);
+            ctx.lineTo(cardX + cardW - radius, cardY);
+            ctx.quadraticCurveTo(cardX + cardW, cardY, cardX + cardW, cardY + radius);
+            ctx.lineTo(cardX + cardW, cardY + headerH);
+            ctx.lineTo(cardX, cardY + headerH);
+            ctx.lineTo(cardX, cardY + radius);
+            ctx.quadraticCurveTo(cardX, cardY, cardX + radius, cardY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            // Header Typography
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
+            ctx.fillText('HOSTEL LAUNDRY • OFFICIAL BOOKING PASS', cardX + 24, cardY + 36);
+
+            ctx.font = '800 23px system-ui, -apple-system, sans-serif';
+            ctx.fillText(bookingData.machine_name || `Machine ${bookingData.machine_id}`, cardX + 24, cardY + 68);
+
+            ctx.font = '500 12px system-ui, -apple-system, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fillText('9.0 KG HEAVY DUTY • GROUND FLOOR LAUNDRY HALL', cardX + 24, cardY + 94);
+
+            // Reference Code Badge (Top Right)
+            const refCode = bookingData.reference_code || 'WM-PASS';
+            ctx.fillStyle = '#ffffff';
+            roundRect(ctx, cardX + cardW - 145, cardY + 28, 125, 38, 8);
+            ctx.fill();
+
+            ctx.fillStyle = '#4f46e5';
+            ctx.font = 'bold 15px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(refCode, cardX + cardW - 82, cardY + 53);
+            ctx.textAlign = 'left';
+
+            // 4. Ticket Body Details
+            let currentY = cardY + headerH + 34;
+
+            // Student Info Row
+            drawDetailRow(ctx, 'STUDENT NAME', bookingData.student_name || '-', 'ROLL NUMBER', bookingData.student_roll || '-', cardX + 24, currentY, cardW - 48);
+            currentY += 58;
+
+            // Date & Mobile Row
+            drawDetailRow(ctx, 'BOOKING DATE', bookingData.booking_date || '-', 'MOBILE NUMBER', bookingData.student_phone || '-', cardX + 24, currentY, cardW - 48);
+            currentY += 58;
+
+            // Slot Window Highlight Box
+            ctx.fillStyle = '#f0fdf4';
+            ctx.strokeStyle = '#86efac';
+            ctx.lineWidth = 1.5;
+            roundRect(ctx, cardX + 20, currentY, cardW - 40, 76, 12);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#166534';
+            ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
+            ctx.fillText('TIME SLOT WINDOW (EXACT 75 MINUTES)', cardX + 34, currentY + 26);
+
+            const startStr = bookingData.start_time ? new Date(bookingData.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+            const endStr = bookingData.end_time ? new Date(bookingData.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+            const slotWindowText = `${startStr} – ${endStr}`;
+
+            ctx.fillStyle = '#15803d';
+            ctx.font = '800 20px system-ui, -apple-system, sans-serif';
+            ctx.fillText(slotWindowText, cardX + 34, currentY + 54);
+
+            // Confirmed Status Badge
+            ctx.fillStyle = '#22c55e';
+            roundRect(ctx, cardX + cardW - 145, currentY + 24, 110, 28, 6);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('✓ CONFIRMED', cardX + cardW - 90, currentY + 43);
+            ctx.textAlign = 'left';
+
+            currentY += 98;
+
+            // Perforated Dashed Divider
+            ctx.save();
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.setLineDash([6, 6]);
+            ctx.beginPath();
+            ctx.moveTo(cardX + 16, currentY);
+            ctx.lineTo(cardX + cardW - 16, currentY);
+            ctx.stroke();
+            ctx.restore();
+
+            currentY += 26;
+
+            // Rules & Instructions Box
+            ctx.fillStyle = '#f8fafc';
+            roundRect(ctx, cardX + 20, currentY, cardW - 40, 78, 8);
+            ctx.fill();
+
+            ctx.fillStyle = '#334155';
+            ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
+            ctx.fillText('📌 HOSTEL LAUNDRY GUIDELINES:', cardX + 32, currentY + 24);
+            ctx.font = '500 11px system-ui, -apple-system, sans-serif';
+            ctx.fillStyle = '#64748b';
+            ctx.fillText('• Please load clothes at the exact start time of your 75-min slot.', cardX + 32, currentY + 43);
+            ctx.fillText('• Empty drum immediately when wash cycle completes for the next student.', cardX + 32, currentY + 62);
+
+            currentY += 100;
+
+            // Footer Timestamp & Brand Note
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '500 10px system-ui, -apple-system, sans-serif';
+            ctx.fillText(`Pass Verified: ${new Date().toLocaleString()} • Official Laundry Ticket`, cardX + 24, currentY + 16);
+            ctx.fillText(`Hostel Helpline: 7447642019 • Double-booking strictly prevented`, cardX + 24, currentY + 32);
+
+            // 5. Convert to Blob & Save to Gallery / Mobile Downloads
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    showToast('Failed to create ticket image.', 'error');
+                    return;
+                }
+
+                const fileName = `HostelWash-Ticket-${refCode}.png`;
+                const file = new File([blob], fileName, { type: 'image/png' });
+
+                // Check for Web Share API (Save to Photos / Share on WhatsApp on Android / iOS)
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: `Hostel Washing Ticket - ${refCode}`,
+                            text: `Hostel Washing Machine Pass: ${bookingData.machine_name || 'Machine'}, Slot: ${slotWindowText}`
+                        });
+                        showToast('Ticket saved / shared successfully! 📸', 'success');
+                        return;
+                    } catch (shareErr) {
+                        if (shareErr.name === 'AbortError') return;
+                    }
+                }
+
+                // Direct file download (saves straight to phone gallery / downloads)
+                const downloadUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(downloadUrl), 3000);
+
+                showToast('✅ Ticket photo saved! Check your Gallery / Downloads folder.', 'success');
+            }, 'image/png');
+
+        } catch (err) {
+            console.error('Save to gallery error:', err);
+            showToast('Could not save ticket: ' + err.message, 'error');
+        }
+    }
+
+    function roundRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+    }
+
+    function drawDetailRow(ctx, label1, val1, label2, val2, x, y, totalW) {
+        const colW = totalW / 2;
+        // Col 1
+        ctx.fillStyle = '#64748b';
+        ctx.font = '600 11px system-ui, -apple-system, sans-serif';
+        ctx.fillText(label1, x, y);
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 15px system-ui, -apple-system, sans-serif';
+        ctx.fillText(val1, x, y + 20);
+
+        // Col 2
+        ctx.fillStyle = '#64748b';
+        ctx.font = '600 11px system-ui, -apple-system, sans-serif';
+        ctx.fillText(label2, x + colW, y);
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 15px system-ui, -apple-system, sans-serif';
+        ctx.fillText(val2, x + colW, y + 20);
     }
 
     /**
@@ -1469,6 +1711,16 @@
 
         elements.btnShowAllQr.addEventListener('click', openQrModal);
         elements.btnConfirmBooking.addEventListener('click', handleBookingSubmission);
+
+        if (elements.btnSaveTicketGallery) {
+            elements.btnSaveTicketGallery.addEventListener('click', () => {
+                if (state.currentPassData) {
+                    saveTicketToGallery(state.currentPassData);
+                } else {
+                    showToast('No booking pass active to save.', 'warning');
+                }
+            });
+        }
     }
 
     function openModal(modal) {

@@ -456,7 +456,17 @@ const BookingService = (function () {
                         });
                         localStorage.setItem('HOSTELWASH_LOCAL_BOOKINGS', JSON.stringify(list));
                     } catch (e) {}
-                    return rpcData;
+                    return {
+                        ...rpcData,
+                        machine_id: Number(machineId),
+                        machine_name: machineInfo ? machineInfo.name : `Machine ${machineId}`,
+                        student_name: studentName.trim(),
+                        student_roll: studentRoll.trim(),
+                        student_phone: studentPhone.trim(),
+                        booking_date: dateStr,
+                        start_time: startObj.toISOString(),
+                        end_time: endObj.toISOString()
+                    };
                 }
             } catch (rpcErr) {
                 // If RPC failed due to overlapping violation, bubble up immediately
