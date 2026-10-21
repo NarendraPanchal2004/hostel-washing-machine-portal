@@ -329,7 +329,7 @@
             const activeCycle = await window.BookingService.getMachineActiveCycle(machine.id);
 
             // Fetch 75-min slots for selected date
-            const slots = await window.BookingService.getMachineSlotAvailability(machine.id, state.selectedDateStr);
+            const slots = await window.BookingService.getMachineSlotAvailability(machine.id, state.selectedDateStr, machine);
 
             // Compute available slots count
             const availableCount = slots.filter(s => s.status === 'available').length;
@@ -474,7 +474,7 @@
         elements.bmSlotsGrid.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-muted); padding: 10px;">Loading real-time slot availability...</p>';
         openModal(elements.bookingModal);
 
-        const slots = await window.BookingService.getMachineSlotAvailability(machineId, state.selectedDateStr);
+        const slots = await window.BookingService.getMachineSlotAvailability(machineId, state.selectedDateStr, machine);
         elements.bmSlotsGrid.innerHTML = '';
 
         slots.forEach(slot => {

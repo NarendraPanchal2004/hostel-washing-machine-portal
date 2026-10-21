@@ -168,11 +168,18 @@ const BookingService = (function () {
                 return fallback;
             }
 
-            // Merge remote machines with local overrides if any
-            return data.map(rm => {
-                const fb = fallback.find(f => Number(f.id) === Number(rm.id));
-                return fb ? { ...rm, ...fb } : rm;
+            // Remote database is primary source of truth for all devices across hostel
+            const merged = data.map(rm => {
+                const fb = fallback.find(f => Number(f.id) === Number(rm.id)) || {};
+                return { ...fb, ...rm };
             });
+
+            // Cache to local storage for instant offline loading
+            try {
+                localStorage.setItem('HOSTELWASH_LOCAL_MACHINES', JSON.stringify(merged));
+            } catch (e) {}
+
+            return merged;
         } catch (e) {
             console.error('getMachines error:', e);
             return fallback;
@@ -183,7 +190,7 @@ const BookingService = (function () {
      * Get slot availability for a machine on a given date
      * Ensures student privacy: doesn't return student roll, phone, or email to students
      */
-    async function getMachineSlotAvailability(machineId, dateStr) {
+    async function getMachineSlotAvailability(machineId, dateStr, currentMachineInfo = null) {
         const standardSlots = generateStandardSlotsForDate(dateStr);
         const client = window.SupabaseManager.getClient();
 
@@ -220,9 +227,13 @@ const BookingService = (function () {
             bookings = getLocalBookings(machineId, dateStr);
         }
 
-        // Check machine active status for date
-        const fallbackMachines = getFallbackMachines();
-        const machineInfo = fallbackMachines.find(m => Number(m.id) === Number(machineId));
+        // Check machine active status for date from live machine info
+        let machineInfo = currentMachineInfo;
+        if (!machineInfo) {
+            const fallbackMachines = getFallbackMachines();
+            machineInfo = fallbackMachines.find(m => Number(m.id) === Number(machineId));
+        }
+
         const isNotYetActive = machineInfo && machineInfo.active_from_date && dateStr < machineInfo.active_from_date;
         const isHardOffline = machineInfo && (machineInfo.status === 'maintenance' || machineInfo.status === 'offline');
 
@@ -303,8 +314,19 @@ const BookingService = (function () {
         }
 
         // 3. Check machine operational status and schedule
-        const fallbackMachines = getFallbackMachines();
-        const machineInfo = fallbackMachines.find(m => Number(m.id) === Number(machineId));
+        let machineInfo = null;
+        try {
+            if (client) {
+                const { data } = await client.from('machines').select('id, status, active_from_date').eq('id', Number(machineId)).single();
+                if (data) machineInfo = data;
+            }
+        } catch (e) {}
+
+        if (!machineInfo) {
+            const fallbackMachines = getFallbackMachines();
+            machineInfo = fallbackMachines.find(m => Number(m.id) === Number(machineId));
+        }
+
         if (machineInfo && machineInfo.active_from_date && dateStr < machineInfo.active_from_date) {
             throw new Error(`Machine ${machineId} is not operational on ${dateStr}. Scheduled to start on ${machineInfo.active_from_date}.`);
         }
@@ -331,6 +353,25 @@ const BookingService = (function () {
                 }
 
                 if (rpcData && rpcData.success) {
+                    try {
+                        const saved = localStorage.getItem('HOSTELWASH_LOCAL_BOOKINGS');
+                        const list = saved ? JSON.parse(saved) : [];
+                        list.push({
+                            id: rpcData.booking_id,
+                            machine_id: Number(machineId),
+                            student_name: studentName.trim(),
+                            student_roll: studentRoll.trim(),
+                            student_phone: studentPhone.trim(),
+                            student_email: (studentEmail || '').trim(),
+                            booking_date: dateStr,
+                            start_time: startObj.toISOString(),
+                            end_time: endObj.toISOString(),
+                            status: 'confirmed',
+                            reference_code: rpcData.reference_code,
+                            created_at: new Date().toISOString()
+                        });
+                        localStorage.setItem('HOSTELWASH_LOCAL_BOOKINGS', JSON.stringify(list));
+                    } catch (e) {}
                     return rpcData;
                 }
             } catch (rpcErr) {
@@ -378,6 +419,13 @@ const BookingService = (function () {
                     }
                     handleSupabaseBookingError(insertError);
                 }
+
+                try {
+                    const saved = localStorage.getItem('HOSTELWASH_LOCAL_BOOKINGS');
+                    const list = saved ? JSON.parse(saved) : [];
+                    list.push(insertData);
+                    localStorage.setItem('HOSTELWASH_LOCAL_BOOKINGS', JSON.stringify(list));
+                } catch (e) {}
 
                 return {
                     success: true,

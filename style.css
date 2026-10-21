@@ -706,10 +706,10 @@ body {
 
 .slot-chip.booked {
     background-color: var(--busy-light);
-    border-color: var(--busy-border);
+    border-color: var(--busy-color);
     color: var(--busy-color);
     cursor: not-allowed;
-    opacity: 0.75;
+    font-weight: 700;
 }
 
 .slot-chip.past {
@@ -914,9 +914,18 @@ body {
 
 .slot-selection-card.booked {
     background-color: var(--busy-light);
-    border-color: var(--busy-border);
-    opacity: 0.65;
+    border: 1.5px solid var(--busy-color);
     cursor: not-allowed;
+}
+
+.slot-selection-card.booked .slot-time-text {
+    color: var(--busy-color);
+    text-decoration: line-through;
+}
+
+.slot-selection-card.booked .slot-status-text {
+    color: var(--busy-color);
+    font-weight: 700;
 }
 
 .slot-selection-card.past {
