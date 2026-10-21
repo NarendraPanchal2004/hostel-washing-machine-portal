@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <link rel="stylesheet" href="style.css?v=3.6">
+    <link rel="stylesheet" href="style.css?v=3.7">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -238,22 +238,22 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                         <div class="form-group">
                             <label class="form-label">Student Full Name *</label>
-                            <input type="text" id="bm-student-name" class="form-input" placeholder="e.g. Narendra Patil" required>
+                            <input type="text" id="bm-student-name" class="form-input" placeholder="Enter full name" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Room No. / Student Roll No. *</label>
-                            <input type="text" id="bm-student-roll" class="form-input" placeholder="e.g. Room B-304 / Roll 22310311" required>
+                            <input type="text" id="bm-student-roll" class="form-input" placeholder="Enter room and roll no." required>
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                         <div class="form-group">
                             <label class="form-label">Mobile Phone (10 Digits) *</label>
-                            <input type="tel" id="bm-student-phone" class="form-input" placeholder="e.g. 9876543210" maxlength="10" required>
+                            <input type="tel" id="bm-student-phone" class="form-input" placeholder="Enter 10-digit mobile number" maxlength="10" required>
                             <span class="form-help">Kept private; not visible to other students.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Email Address (Optional)</label>
-                            <input type="email" id="bm-student-email" class="form-input" placeholder="e.g. student@viit.ac.in">
+                            <input type="email" id="bm-student-email" class="form-input" placeholder="Enter email address (optional)">
                         </div>
                     </div>
                 </div>
@@ -283,20 +283,20 @@
                             <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Hostel Laundry Pass</span>
                             <h4 id="pass-machine-title" style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">Machine 1</h4>
                         </div>
-                        <div id="pass-ref-code" class="pass-ref-badge">WM1-987654</div>
+                        <div id="pass-ref-code" class="pass-ref-badge">-</div>
                     </div>
                     <div class="pass-details-grid">
                         <div class="pass-item">
                             <label>Student Name</label>
-                            <p id="pass-student-name">Narendra</p>
+                            <p id="pass-student-name">-</p>
                         </div>
                         <div class="pass-item">
                             <label>Booking Date</label>
-                            <p id="pass-date">2026-10-19</p>
+                            <p id="pass-date">-</p>
                         </div>
                         <div class="pass-item">
                             <label>Slot Window (75 Mins)</label>
-                            <p id="pass-slot-time">09:00 AM - 10:15 AM</p>
+                            <p id="pass-slot-time">-</p>
                         </div>
                         <div class="pass-item">
                             <label>Status</label>
@@ -378,7 +378,7 @@
                 <form id="admin-login-form" onsubmit="return false;">
                     <div class="form-group" style="margin-bottom: 12px;">
                         <label class="form-label">Admin ID / Mobile / Email</label>
-                        <input type="text" id="admin-email-input" class="form-input" placeholder="e.g. 7447642019" required>
+                        <input type="text" id="admin-email-input" class="form-input" placeholder="Enter Admin ID or Mobile" required>
                     </div>
                     <div class="form-group" style="margin-bottom: 14px;">
                         <label class="form-label">Admin Password</label>
@@ -533,11 +533,11 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Application Controller Scripts -->
-    <script src="js/config.js?v=3.6"></script>
-    <script src="js/supabaseClient.js?v=3.6"></script>
-    <script src="js/bookingService.js?v=3.6"></script>
-    <script src="js/adminService.js?v=3.6"></script>
-    <script src="js/qrService.js?v=3.6"></script>
-    <script src="script.js?v=3.6"></script>
+    <script src="js/config.js?v=3.7"></script>
+    <script src="js/supabaseClient.js?v=3.7"></script>
+    <script src="js/bookingService.js?v=3.7"></script>
+    <script src="js/adminService.js?v=3.7"></script>
+    <script src="js/qrService.js?v=3.7"></script>
+    <script src="script.js?v=3.7"></script>
 </body>
 </html>
