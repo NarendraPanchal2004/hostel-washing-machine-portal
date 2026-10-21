@@ -14,7 +14,7 @@ const AppConfig = (function () {
     // Default configuration (Safe placeholders - no secrets)
     const defaults = {
         supabaseUrl: 'https://zhurgvwsaawacmukbvbi.supabase.co',
-        supabaseAnonKey: '',
+        supabaseAnonKey: 'sb_publishable_w1Y0JZdQfxdaEkZDL3Af2g_88t8IgGj',
         hostelName: 'Boys & Girls Hostel Laundry Wing',
         slotDurationMinutes: 75,
         bookingWindowDays: 7, // Today + 6 days
@@ -43,8 +43,8 @@ const AppConfig = (function () {
                 const parsed = JSON.parse(saved);
                 return {
                     ...defaults,
-                    supabaseUrl: parsed.supabaseUrl || '',
-                    supabaseAnonKey: parsed.supabaseAnonKey || ''
+                    supabaseUrl: parsed.supabaseUrl || defaults.supabaseUrl,
+                    supabaseAnonKey: parsed.supabaseAnonKey || defaults.supabaseAnonKey
                 };
             }
         } catch (e) {
