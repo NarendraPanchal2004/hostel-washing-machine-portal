@@ -142,6 +142,14 @@
 
         // 7. Setup Live Countdown Timer Interval (runs every 30s)
         setInterval(updateActiveWashCountdowns, 30000);
+
+        // 8. Background Auto-Sync Polling (every 10s across all mobile devices)
+        setInterval(() => {
+            reloadMachines();
+            if (elements.adminDashboardModal && elements.adminDashboardModal.classList.contains('active')) {
+                loadAdminBookings();
+            }
+        }, 10000);
         console.log('HostelWash application bootstrapped successfully.');
     }
 
