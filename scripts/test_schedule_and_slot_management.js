@@ -49,8 +49,11 @@ async function runTests() {
     // TEST 3: Student Booking on Weekend Morning without Login
     // -------------------------------------------------------------
     console.log('Test 3: Student creates booking on Sunday 05:00 AM slot without login...');
-    // Sunday 2026-10-25 05:00 AM IST is 2026-10-24T23:30:00Z
-    const sundaySlotISO = '2026-10-24T23:30:00Z';
+    // Find clean upcoming Sunday (e.g. 2026-11-08)
+    const sundayDateStr = '2026-11-08';
+    // 05:00 AM IST on Sunday = 2026-11-07T23:30:00Z
+    const sundaySlotISO = '2026-11-07T23:30:00Z';
+
     const bookRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/book_washing_machine`, {
         method: 'POST',
         headers: anonHeaders,
@@ -61,7 +64,7 @@ async function runTests() {
             p_student_phone: '9876543210',
             p_student_email: 'weekend@test.com',
             p_start_time: sundaySlotISO,
-            p_booking_date: '2026-10-25'
+            p_booking_date: sundayDateStr
         })
     });
     const bookData = await bookRes.json();
@@ -83,8 +86,8 @@ async function runTests() {
             p_student_roll: 'W-999',
             p_student_phone: '9876543211',
             p_student_email: 'intruder@test.com',
-            p_start_time: '2026-10-25T00:00:00Z', // 30 minutes into the slot
-            p_booking_date: '2026-10-25'
+            p_start_time: `${sundayDateStr}T00:00:00Z`, // 30 minutes into the slot
+            p_booking_date: sundayDateStr
         })
     });
     const duplicateData = await duplicateRes.json();
@@ -126,7 +129,7 @@ async function runTests() {
         method: 'POST',
         headers: adminHeaders,
         body: JSON.stringify({
-            slot_date: '2026-10-25',
+            slot_date: sundayDateStr,
             slot_start: '07:30',
             machine_id: 2,
             is_disabled: true,
@@ -144,7 +147,7 @@ async function runTests() {
     // TEST 7: Student Attempts to Book Blocked Slot (Server-Side Block)
     // -------------------------------------------------------------
     console.log('Test 7: Student attempts to book the admin-blocked 07:30 slot...');
-    // Sunday 07:30 AM IST is 2026-10-25T02:00:00Z
+    // Sunday 07:30 AM IST = 02:00 UTC
     const blockedRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/book_washing_machine`, {
         method: 'POST',
         headers: anonHeaders,
@@ -154,8 +157,8 @@ async function runTests() {
             p_student_roll: 'W-202',
             p_student_phone: '9876543212',
             p_student_email: 'hopeful@test.com',
-            p_start_time: '2026-10-25T02:00:00Z',
-            p_booking_date: '2026-10-25'
+            p_start_time: `${sundayDateStr}T02:00:00Z`,
+            p_booking_date: sundayDateStr
         })
     });
     const blockedData = await blockedRes.json();
@@ -185,8 +188,8 @@ async function runTests() {
             p_student_roll: 'W-202',
             p_student_phone: '9876543212',
             p_student_email: 'hopeful@test.com',
-            p_start_time: '2026-10-25T02:00:00Z',
-            p_booking_date: '2026-10-25'
+            p_start_time: `${sundayDateStr}T02:00:00Z`,
+            p_booking_date: sundayDateStr
         })
     });
     const rebookData = await rebookRes.json();

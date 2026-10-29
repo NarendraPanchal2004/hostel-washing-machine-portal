@@ -79,6 +79,10 @@ async function testSecurity() {
 
     // 6. Test student booking creation via secure RPC
     console.log('Test 6: Student books slot via secure RPC...');
+    const futureDate = new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0];
+    const futureStartTime = `${futureDate}T11:30:00Z`;
+    const conflictStartTime = `${futureDate}T12:00:00Z`;
+
     const bookRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/book_washing_machine`, {
         method: 'POST',
         headers: anonHeaders,
@@ -88,7 +92,7 @@ async function testSecurity() {
             p_student_roll: 'R-404',
             p_student_phone: '9876501234',
             p_student_email: 'student@test.com',
-            p_start_time: '2026-10-23T11:30:00Z'
+            p_start_time: futureStartTime
         })
     });
     const bookResult = await bookRes.json();
@@ -110,7 +114,7 @@ async function testSecurity() {
             p_student_roll: 'R-999',
             p_student_phone: '9876501235',
             p_student_email: 'attacker@test.com',
-            p_start_time: '2026-10-23T12:00:00Z' // 30 mins into the 75m slot!
+            p_start_time: conflictStartTime // 30 mins into the 75m slot!
         })
     });
     const conflictData = await conflictRes.json();

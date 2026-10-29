@@ -1,0 +1,25 @@
+{
+  "name": "HostelMate — Integrated Hostel Management System",
+  "short_name": "HostelMate",
+  "description": "Smart Hostel Management Portal with Laundry, Gate Entry/Exit, Mess, Sports, Labs, and Attendance with Geofence verification",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "categories": ["education", "utilities", "productivity"],
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2855/2855325.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2855/2855325.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

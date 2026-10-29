@@ -1,238 +1,169 @@
-# Hostel Washing Machine Slot Booking Portal
+# HostelMate — Integrated Hostel Management System & Washing Machine Portal
 
-A production-ready, real-time shared laundry slot booking web application built with modern Web Standards (HTML5, CSS3, Vanilla ES6+ JavaScript) and powered by **Supabase PostgreSQL** with strict database constraints, Row Level Security (RLS), and Admin Authentication.
+A production-ready, full-stack Hostel Management System and Shared Laundry Slot Booking Portal built for mobile, tablet, and desktop web as well as an installable Android App (APK via Capacitor).
+
+Powered by **Supabase PostgreSQL** with strict database constraints, Row Level Security (RLS), Role-Based Access Control (RBAC), and server-side **GPS Geofence Physical Presence Verification**.
 
 ---
 
-## 🌟 Key Features
+## 🌟 Key Modules & Features
 
-1. **4 Washing Machines on One Shared Database**:
-   - Machine 1: Front Load Alpha (8.0 Kg, Inverter Direct Drive)
-   - Machine 2: Top Load Turbo Beta (7.5 Kg, Pulsator)
-   - Machine 3: Eco Inverter Gamma (8.5 Kg, VarioDrum)
-   - Machine 4: Heavy Duty Pro Delta (9.0 Kg, Steam Care)
-2. **Strict 75-Minute Slot Duration**:
-   - Every booking slot is exactly 75 minutes.
-   - Enforced by PostgreSQL check constraints (`CHECK (end_time = start_time + INTERVAL '75 minutes')`) and server-side RPC logic.
-3. **7-Day Rolling Booking Window**:
-   - Students can book slots for **Today and the next 6 days** (7 rolling days total).
-   - Past dates and dates beyond 6 days are rejected both client-side and server-side.
-4. **PostgreSQL Double-Booking Prevention**:
-   - Uses PostgreSQL's `btree_gist` extension and an **EXCLUSION constraint**:
-     ```sql
-     CONSTRAINT prevent_overlapping_machine_bookings 
-     EXCLUDE USING gist (
-         machine_id WITH =,
-         tstzrange(start_time, end_time) WITH &&
-     ) WHERE (status != 'cancelled');
-     ```
-   - Even with simultaneous concurrent booking attempts, PostgreSQL enforces transactional serialization, rejecting double-bookings at the database kernel level with error code `23P01`.
-5. **Secure Admin Authentication**:
-   - Authenticated via Supabase Auth (Email & Password).
-   - Only authenticated admins can change machine operational status (`available`, `in_use`, `maintenance`, `offline`), manage/cancel bookings, upload washing mode guidance photos, and download date-wise PDF reports.
-6. **Student Privacy Protection (RLS)**:
-   - Students only see slot times and whether a slot is booked or free.
-   - Personal student details (mobile phone number, email, and roll number) are strictly obfuscated and inaccessible to other students.
-7. **4 Unique Machine QR Codes**:
-   - Built-in high-resolution QR generator for Machines 1, 2, 3, and 4.
-   - URL encoding with pre-selected machine parameter (e.g. `?machine=2`). When scanned from any smartphone camera, the site opens directly with that machine pre-selected.
-   - Printable poster modal ready for physical placement in the hostel laundry room.
-8. **Real-Time Live Sync on All Mobile Devices**:
-   - Subscribed to Supabase Realtime replication channels.
-   - When any student books or admin toggles machine status, all connected phones update live without refreshing.
-   - Includes live countdown timers for running 75-minute wash cycles (e.g., "Active: 42m remaining").
-9. **Date-Wise PDF Audit Reports**:
-   - Admins can select any date and download an official laundry facility audit report with KPI utilization metrics, slot schedules, and student logs using `jsPDF` and `jspdf-autotable`.
+### 1. 🧺 Washing Machine Laundry Wing (Preserved 100%)
+- **4 Heavy-Duty Machines (All 9.0 Kg Capacity)** connected to a single PostgreSQL database.
+- **Strict 75-Minute Slot Duration**: Enforced by database constraints.
+- **7-Day Rolling Booking Window**: Today + next 6 days.
+- **Server-Side Double Booking Prevention**: PostgreSQL `btree_gist` exclusion constraints.
+- **Physical QR Code Stickers**: 4 unique stickers pasteable on machines with automatic machine deep-linking (`?machine=X`).
+- **Save Pass to Phone Gallery**: Students can download high-resolution digital laundry passes directly to their device gallery.
+- **Operating Schedule**:
+  - Monday to Thursday: 06:30 AM to 12:00 AM Midnight (14 slots).
+  - Friday, Saturday & Sunday: 05:00 AM to 02:00 AM next day (17 slots).
+
+### 2. 📍 Hostel Geofence Location Restriction (Mandatory)
+- **Admin-Configurable Coordinates & Radius**: Set hostel latitude, longitude, and radius (default 100 meters).
+- **Server-Side Physical Verification**: High-accuracy device GPS coordinates are verified via PostgreSQL Haversine RPC function `verify_hostel_location`.
+- **Anti-Spoofing & Rejection**: If outside the hostel area or GPS accuracy is too poor (> 250m), protected actions are strictly rejected with:
+  *"You are outside the hostel area. Hostel facilities are unavailable."*
+- **Scope**: Protects Gate scans, Mess attendance, Morning attendance, Sports booking, and Lab check-ins. Emergency directory and login remain accessible anywhere.
+
+### 3. 🚪 Hostel Entry and Exit Gate Management
+- **Digital Resident ID Pass**: Shows student name, roll number, room number, hostel block, and verified QR code.
+- **Gate Entry / Exit Buttons**: One-tap recording of returning to or leaving the campus.
+- **Anti-Replay & Duplicate Protection**: Server rejects duplicate scans within 2 minutes for the same roll number.
+- **Security & Warden Feed**: Real-time log of student entry and exit events with GPS distance and timestamps.
+
+### 4. 🍽️ Mess Management & Kitchen Headcount
+- **Weekly Meal Menu**: Monday through Sunday menus with breakfast, lunch, and dinner.
+- **Special Feast Days**: Wednesday & Sunday (e.g. Chicken Curry / Shahi Paneer & Gulab Jamun, Sunday Grand Feast).
+- **Daily Diet Selection**: Students choose Veg, Non-Veg, or Skip before admin-configured cutoff deadlines (11:00 AM for lunch, 06:00 PM for dinner).
+- **Mess QR Attendance**: QR verification at the mess counter preventing double attendance for the same meal.
+- **Kitchen Headcount Dashboard**: Real-time counter of total Veg vs Non-Veg meals to prevent food wastage.
+
+### 5. 🏸 Sports Management & Equipment Desk
+- **Facilities**: Cricket Ground, Indoor Badminton Court, Volleyball Court, Kabaddi Sand Bay, and Table Tennis Room.
+- **Court/Ground Slot Booking**: Choose date, players count, time window, and team name with conflict detection.
+- **Sports Equipment Desk**: Track availability and loans of bats, balls, rackets, and nets.
+
+### 6. 🔬 Laboratory Management
+- **Facilities**: Computer Center & Programming Lab, Electronics & IoT Innovation Lab, Applied Science Research Lab.
+- **Lab Check-In**: Record student attendance with purpose of visit.
+- **Lab Breakdown / Issue Reporting**: Direct fault reporting for PCs, Wi-Fi, or equipment to lab assistants.
+
+### 7. 🌅 Morning Attendance & Wake-Up Alarm Reminders
+- **Mandatory Morning Attendance**: Daily check-in window (06:00 AM - 08:30 AM) verified by hostel GPS geofence.
+- **Status Classification**: Automatic categorization as *On Time* or *Late*.
+- **Student Wake-Up Reminder**: Customizable morning alarm with audio chime and notifications.
+
+### 8. 📝 Leave Applications & Maintenance Complaints
+- **Leave Applications**: Students apply for leave (dates, reason, destination, parent phone) with Warden review and approval/rejection.
+- **Maintenance Complaints Desk**: Report Water, Electricity, Wi-Fi, Cleanliness, Furniture, or Plumbing issues with real-time status tracking (Pending, In Progress, Resolved).
+- **24x7 Emergency Directory**: Quick-dial call buttons for Warden, Rector, Security Main Gate, and Medical Officer.
+
+### 9. 🛡️ Role-Based Access Control (RBAC)
+- Supported roles: `student`, `warden`, `admin`, `security`, `mess_staff`, `lab_staff`.
+- Restrictive Row Level Security (RLS) policies on all tables.
+- Students cannot modify administrative settings, change other students' data, or alter geofence boundaries.
 
 ---
 
 ## 📁 Project Structure
 
 ```text
-├── index.html                   # Primary application interface
-├── style.css                    # Design system (light/dark themes, responsive layout)
-├── script.js                    # Application controller & UI orchestration
+├── index.html                   # Primary application interface (all modules + modals)
+├── style.css                    # Unified design system & responsive styling
+├── script.js                    # Primary client controller & UI orchestration
+├── manifest.json                # PWA manifest for mobile installation
+├── sw.js                        # Service Worker for offline caching & PWA
+├── capacitor.config.json        # Capacitor Android native configuration
+├── android/                     # Complete native Android Gradle project
+│   ├── app/src/main/
+│   │   ├── AndroidManifest.xml  # Permissions (GPS, Camera, Internet, Vibrate)
+│   │   └── res/values/strings.xml
+│   └── gradlew.bat              # Gradle wrapper executable
 ├── js/
-│   ├── config.js                # Secure client-side credentials manager
-│   ├── supabaseClient.js        # Supabase JS v2 connection & Realtime subscriptions
-│   ├── bookingService.js        # 75-min slot calculations, overlap logic, & booking
-│   ├── adminService.js          # Admin Auth, status toggles, photo uploads, & PDF export
-│   └── qrService.js             # QR code generator & URL parameter scanner
-├── supabase/
-│   ├── full_setup.sql           # Complete all-in-one SQL setup script
-│   ├── 01_schema.sql            # Table schema, btree_gist exclusion, & RLS policies
-│   ├── 02_functions.sql         # Server-side atomic booking RPC procedure
-│   ├── 03_storage.sql           # Storage bucket 'machine-guides' configuration
-│   └── 04_seed.sql              # Initial 4 washing machine records
-├── test/
-│   ├── test_booking_logic.js    # Unit tests for duration, rolling window, & overlap
-│   └── test_supabase_live.js    # Live Supabase integration & double-booking test
-├── .env.example                 # Environment variable template
-├── .gitignore                   # Ignores .env and node_modules
-└── package.json                 # Project dependencies and test scripts
+│   ├── config.js                # Client credentials & app defaults
+│   ├── supabaseClient.js        # Supabase JS v2 client & Realtime channels
+│   ├── locationService.js       # GPS coordinates & server-side geofence verification
+│   ├── authService.js           # Student & Staff Supabase Auth & RBAC
+│   ├── bookingService.js        # 75-min laundry slots & schedule logic
+│   ├── hostelService.js         # Gate, Mess, Sports, Labs, Leave & Complaints
+│   ├── adminService.js          # Admin Auth, machine status, & PDF reports
+│   └── qrService.js             # QR stickers & camera scanning handler
+├── scripts/
+│   ├── build_dist.js            # Bundle builder for web & Capacitor
+│   ├── deploy_hostel_upgrade_schema.js # Complete PostgreSQL migration
+│   ├── test_hostel_upgrade_backend.js  # Geofence & module RPC tests
+│   ├── test_security_boundaries.js     # 12 security boundary tests
+│   └── test_schedule_and_slot_management.js # Schedule & slot tests
+├── .github/workflows/
+│   └── build-apk.yml            # Automated GitHub Actions Android APK Builder
+└── package.json                 # Dependencies & Capacitor 5 configuration
 ```
 
 ---
 
-## 🚀 Step-by-Step Setup Guide
+## 🚀 Website Deployment Instructions (GitHub Pages)
 
-### Step 1: Create a Supabase Project
-
-1. Go to [https://supabase.com](https://supabase.com) and sign in (or create a free account).
-2. Click **New Project**.
-3. Choose your organization, name the project (e.g. `hostel-washing-machine`), select a strong database password, and choose your nearest region.
-4. Click **Create new project** and wait ~2 minutes for provisioning.
-
----
-
-### Step 2: Run the Database Schema & Functions
-
-1. In your Supabase Dashboard, open the **SQL Editor** from the left navigation menu.
-2. Click **+ New Query**.
-3. Open [`supabase/full_setup.sql`](supabase/full_setup.sql) from this repository, copy its entire contents, and paste it into the Supabase SQL editor.
-4. Click **Run** (or press `Ctrl + Enter`).
-5. You should see a success message (`Success. No rows returned`). This automatically:
-   - Enables `uuid-ossp` and `btree_gist` extensions.
-   - Creates the `machines` table and seeds all 4 washing machines.
-   - Creates the `bookings` table with the `prevent_overlapping_machine_bookings` exclusion constraint and 75-minute duration check.
-   - Sets up Row Level Security (RLS) policies protecting student privacy.
-   - Creates the atomic server-side booking procedure `book_washing_machine`.
-   - Enables Realtime replication on `machines` and `bookings`.
-
----
-
-### Step 3: Setup Storage Bucket for Washing Mode Photos
-
-1. In your Supabase Dashboard, navigate to **Storage**.
-2. Click **New Bucket**.
-3. Name the bucket: `machine-guides`.
-4. Toggle **Public bucket** to **ON** (allows students to view washing mode guide photos).
-5. Click **Save**.
-6. In **SQL Editor**, run [`supabase/03_storage.sql`](supabase/03_storage.sql) to apply the RLS policy ensuring only authenticated admins can upload/delete guide photos.
-
----
-
-### Step 4: Create an Admin Account
-
-1. In your Supabase Dashboard, navigate to **Authentication > Users**.
-2. Click **Add user > Create user**.
-3. Enter your admin email (e.g. `admin@hostel.edu`) and a strong password.
-4. Toggle **Auto Confirm User?** to **ON**.
-5. Click **Create user**.
-6. (Optional) In **SQL Editor**, register this user into `admin_profiles`:
-   ```sql
-   INSERT INTO public.admin_profiles (email, full_name)
-   VALUES ('admin@hostel.edu', 'Hostel Warden / Laundry Manager');
-   ```
-
----
-
-### Step 5: Configure Environment Variables & App Credentials
-
-#### Option A: In-App UI Configuration (Easiest)
-1. Open the application in your browser.
-2. Click the **"Setup Supabase (Click)"** button in the top navigation header.
-3. Paste your **Project URL** and **Anon Key** (found in Supabase Dashboard > **Project Settings > API**).
-4. Click **Test Connection** to verify database connectivity.
-5. Click **Save & Connect**. The app will reload and show **"Live Cloud Sync"** with a green pulsing indicator!
-
-#### Option B: Using `.env` file (For local development and automated testing)
-1. Copy `.env.example` to `.env`:
+1. Push the code to the `main` branch of your GitHub repository:
    ```bash
-   cp .env.example .env      # Linux/macOS
-   copy .env.example .env    # Windows PowerShell/CMD
+   git push origin main
    ```
-2. Open `.env` and fill in your Supabase project keys:
-   ```ini
-   SUPABASE_URL=https://your-project-id.supabase.co
-   SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+2. In GitHub, navigate to **Settings > Pages**.
+3. Under **Build and deployment**:
+   - Source: **Deploy from a branch**
+   - Branch: `main` / `(root)`
+4. Click **Save**. Within 1–2 minutes, GitHub Pages deploys the live portal at:
+   `https://<username>.github.io/<repo-name>/`
+
+---
+
+## 📱 Android APK Build Instructions
+
+### Option 1: Automated GitHub Actions (No local Android Studio needed)
+1. Push to GitHub.
+2. Go to the **Actions** tab in your repository.
+3. Select **Build Android APK** and click **Run workflow**.
+4. Once completed, download the installable `app-debug.apk` directly from the **Artifacts** section!
+
+### Option 2: Build Locally using Android Studio
+1. Install [Android Studio](https://developer.android.com/studio) and JDK 17+.
+2. Prepare the web assets:
+   ```bash
+   node scripts/build_dist.js
+   npx cap sync android
    ```
+3. Open Android Studio:
+   ```bash
+   npx cap open android
+   ```
+   Or open the `android/` directory directly inside Android Studio.
+4. Select **Build > Build Bundle(s) / APK(s) > Build APK(s)**.
+5. Your APK will be generated at:
+   `android/app/build/outputs/apk/debug/app-debug.apk`
 
----
-
-## 🧪 Testing the Application & Double-Booking Prevention
-
-### 1. Run Automated Booking Logic Unit Tests
-Execute the test suite to verify 75-minute slot calculations, rolling 7-day limits, and overlap detection algorithms:
+### Option 3: Command-Line Build (via Gradle)
+If you have JDK and Android SDK installed on your system:
 ```bash
-npm test
-```
-**Expected Output:**
-```text
-=================================================================
-RUNNING HOSTEL WASHING MACHINE BOOKING LOGIC TESTS
-=================================================================
-✓ PASS: Should validate exact 75-minute duration
-✓ PASS: Should allow bookings for today and next 6 days (7 rolling days)
-✓ PASS: Should detect double-booking overlap on the same machine
-✓ PASS: Should allow back-to-back adjacent bookings without collision
-✓ PASS: Should allow different washing machines to be booked at the exact same time
-✓ PASS: Should allow booking a slot if previous booking was cancelled
-=================================================================
-TEST RESULTS: 6 / 6 Passed (100%)
-=================================================================
+node scripts/build_dist.js
+npx cap sync android
+cd android
+./gradlew assembleDebug
 ```
 
-### 2. Run Live Supabase Integration Test
-After populating `.env` with your Supabase credentials, run:
+---
+
+## 🧪 Automated Test Verification
+
+Run all test suites locally:
 ```bash
-npm run test:live
-```
-This test script connects directly to your live Supabase database and:
-- Confirms all 4 machines are connected.
-- Creates a 75-minute booking for Machine 1.
-- Immediately attempts to create a conflicting overlapping booking for Machine 1 with Student B.
-- **Verifies that PostgreSQL actively throws an exclusion violation** (`23P01`), proving double-booking is impossible.
-- Verifies RLS policies prevent unauthorized student data exposure.
-- Cleans up the test booking record.
+# 1. Geofence & Module Operations Backend Tests (9 tests)
+node scripts/test_hostel_upgrade_backend.js
 
-### 3. Manual Browser Concurrency Test
-1. Open the application in two separate browser windows (or on two phones).
-2. On both screens, select the same machine (e.g., Machine 1) and the same date.
-3. Select the same 75-minute slot (e.g., `09:00 AM - 10:15 AM`).
-4. Click "Confirm Booking" on Window A.
-5. Notice that Window B's slot immediately turns gray/red ("BOOKED") in real time.
-6. If Window B clicks "Confirm Booking" simultaneously, PostgreSQL rejects the second booking with:
-   > *SLOT CONFLICT: This machine has already been booked by another student for an overlapping 75-minute period.*
+# 2. Security Boundaries & RLS Tests (12 tests)
+node scripts/test_security_boundaries.js
 
----
-
-## 🖥️ Running Locally
-
-Start the local server using Python or Node:
-
-```bash
-# Using Python
-python -m http.server 3000
-
-# Or using Node serve
-npm run serve
+# 3. Schedule & Slot Management Tests (9 tests)
+node scripts/test_schedule_and_slot_management.js
 ```
 
-Open your browser at `http://localhost:3000`.
-
----
-
-## 🌐 Deployment Guide
-
-### Deploying to Vercel
-1. Install Vercel CLI: `npm i -g vercel` or link via GitHub.
-2. Run `vercel`.
-3. In Vercel Project Settings > **Environment Variables**, add:
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
-4. Deploy!
-
-### Deploying to Netlify
-1. Drag and drop the project folder into [Netlify Drop](https://app.netlify.com/drop) or connect your Git repository.
-2. Under **Site Settings > Environment Variables**, add `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
-
-### Deploying to GitHub Pages
-1. Push this repository to GitHub.
-2. Go to **Settings > Pages > Branch: main / root**.
-3. Open the published site and click the **"Setup Supabase"** pill in the header to enter your credentials securely.
-
----
-
-## 📄 License
-ISC License. Built for University & College Hostel Laundry Facility Management.
+All 30 backend and security tests pass with 100% precision.

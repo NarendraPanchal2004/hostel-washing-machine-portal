@@ -1396,3 +1396,368 @@ body {
         width: 100%;
     }
 }
+
+
+/* ==========================================================================
+   HOSTELMATE - INTEGRATED HOSTEL MANAGEMENT SYSTEM UPGRADE STYLES
+   ========================================================================== */
+
+/* Main Navigation Bar (Module Switcher) */
+.module-nav-container {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    padding: 8px 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+.module-nav-pills {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.module-nav-pills::-webkit-scrollbar {
+    height: 4px;
+}
+
+.module-nav-pills::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: var(--radius-full);
+}
+
+.module-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--transition);
+}
+
+.module-pill-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.module-pill-btn.active {
+    background: var(--primary-color);
+    color: #ffffff;
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+}
+
+/* Geofence Status Pill & Banner */
+.geofence-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.geofence-pill.inside {
+    background: var(--available-light);
+    color: var(--available-color);
+    border: 1px solid var(--available-border);
+}
+
+.geofence-pill.outside {
+    background: var(--busy-light);
+    color: var(--busy-color);
+    border: 1px solid var(--busy-border);
+}
+
+.geofence-pill.checking {
+    background: var(--warning-light);
+    color: var(--warning-color);
+    border: 1px solid var(--warning-border);
+}
+
+.geofence-alert-banner {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 12px 18px;
+    border-radius: var(--radius-md);
+    margin: 16px 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    animation: fadeIn 0.3s ease;
+}
+
+[data-theme="dark"] .geofence-alert-banner {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+}
+
+/* Module Section Containers */
+.hostel-module-section {
+    display: none;
+    animation: fadeIn 0.25s ease;
+}
+
+.hostel-module-section.active {
+    display: block;
+}
+
+/* Digital Student ID Card */
+.digital-id-card {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+    color: #ffffff;
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+    max-width: 440px;
+    margin: 0 auto 20px auto;
+}
+
+.digital-id-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.id-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+
+.id-card-body {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+}
+
+.id-photo-placeholder {
+    width: 76px;
+    height: 76px;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.12);
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.id-info h3 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+
+.id-info p {
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 2px;
+}
+
+.id-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Gate Actions Grid */
+.gate-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.gate-action-card {
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.gate-action-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.gate-action-icon {
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+}
+
+/* Mess Module Styles */
+.mess-diet-selector {
+    display: flex;
+    gap: 10px;
+    background: var(--bg-primary);
+    padding: 6px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-color);
+    margin: 12px 0;
+}
+
+.diet-toggle-btn {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: var(--radius-full);
+    border: none;
+    background: transparent;
+    font-size: 0.86rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: var(--transition);
+    text-align: center;
+}
+
+.diet-toggle-btn.active.veg {
+    background: #10b981;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35);
+}
+
+.diet-toggle-btn.active.non_veg {
+    background: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
+}
+
+.diet-toggle-btn.active.skip {
+    background: #64748b;
+    color: #ffffff;
+}
+
+.mess-headcount-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: var(--radius-md);
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+/* Sports & Lab Cards */
+.facility-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+
+.facility-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-md);
+}
+
+/* Wake-up alarm switch */
+.alarm-toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-primary);
+    padding: 14px 18px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    margin-top: 10px;
+}
+
+/* Emergency Contact Directory */
+.emergency-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+}
+
+.emergency-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: var(--shadow-sm);
+}
+
+.emergency-card:hover {
+    border-color: #ef4444;
+}
+
+.emergency-call-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--radius-full);
+    background: #ef4444;
+    color: #ffffff;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 0.82rem;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
+}
+
+/* Mobile Bottom Navigation Bar */
+@media (max-width: 768px) {
+    .module-nav-container {
+        padding: 6px 10px;
+    }
+
+    .module-pill-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
+    .digital-id-card {
+        padding: 16px;
+    }
+}

@@ -24,5 +24,10 @@
     "@supabase/supabase-js": "^2.118.0",
     "dotenv": "^18.0.8",
     "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^5.7.8",
+    "@capacitor/cli": "^5.7.8",
+    "@capacitor/core": "^5.7.8"
   }
 }

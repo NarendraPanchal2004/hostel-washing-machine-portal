@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>HostelMate — Integrated Hostel Management System & Washing Machine Portal</title>
+    
+    <!-- PWA Manifest & Theme -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="stylesheet" href="style.css?v=5.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Supabase JS Client v2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- QRCode.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Html5Qrcode Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <!-- jsPDF & autoTable for date-wise PDF report generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Application Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="brand-logo" title="HostelMate Integrated System">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>HostelMate</h1>
+                    <p class="subtitle">Integrated Hostel Management & Shared Laundry Wing</p>
+                </div>
+            </div>
+
+            <!-- Geofence & Cloud Sync Status -->
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <div id="geofence-status-pill" class="geofence-pill checking" title="Hostel Geofence Physical Presence Check">
+                    📍 Checking Location...
+                </div>
+                <div id="cloud-sync-pill" class="geofence-pill inside" style="background: var(--primary-light); color: var(--primary-color); border: 1px solid var(--border-color); font-size: 0.75rem;">
+                    ☁️ Live Cloud Sync
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <!-- Emergency Directory Trigger -->
+                <button id="btn-emergency-contacts" class="btn btn-secondary" title="Hostel Emergency Contacts Directory" style="border-color: #fecaca; color: #dc2626;">
+                    <span>📞 Emergency</span>
+                </button>
+
+                <!-- Universal QR Scanner Trigger -->
+                <button id="btn-open-scanner" class="btn btn-secondary" title="Scan Facility or Machine QR Code">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+                        <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+                        <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+                        <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                        <line x1="7" y1="12" x2="17" y2="12"></line>
+                    </svg>
+                    <span>Scan QR</span>
+                </button>
+
+                <!-- Student Login / Profile Trigger -->
+                <button id="btn-student-auth" class="btn btn-outline" title="Student Login / Profile">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span id="student-btn-text">Student Login</span>
+                </button>
+
+                <!-- 4 Machine QR Codes Modal Trigger -->
+                <button id="btn-show-all-qr" class="btn btn-secondary" title="View & Print 4 Machine QR Codes">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>Machine QR</span>
+                </button>
+
+                <!-- Admin & Staff Portal Button -->
+                <button id="btn-admin-auth" class="btn btn-outline" title="Admin & Staff Login / Dashboard">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span id="admin-btn-text">Staff / Admin</span>
+                </button>
+
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle" class="btn btn-icon" title="Toggle Light / Dark Theme" aria-label="Toggle Theme">
+                    <svg id="sun-icon" class="theme-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg id="moon-icon" class="theme-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Geofence Out-of-Area Warning Banner -->
+        <div id="geofence-alert-banner" class="geofence-alert-banner">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.3rem;">⚠️</span>
+                <div>
+                    <strong>You are outside the hostel area. Hostel facilities are unavailable.</strong>
+                    <div id="geofence-alert-detail" style="font-size: 0.82rem; font-weight: normal; margin-top: 2px;">
+                        Physical presence inside hostel boundary is required for attendance, bookings, and gate scans.
+                    </div>
+                </div>
+            </div>
+            <button type="button" id="btn-recheck-geofence" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; white-space: nowrap;">
+                🔄 Recheck GPS
+            </button>
+        </div>
+
+        <!-- Main Module Navigation Bar (Pill Tabs) -->
+        <nav class="module-nav-container">
+            <div class="module-nav-pills">
+                <button type="button" class="module-pill-btn active" data-module="section-laundry">
+                    🧺 Washing Machines
+                </button>
+                <button type="button" class="module-pill-btn" data-module="section-gate">
+                    🚪 Gate Entry / Exit
+                </button>
+                <button type="button" class="module-pill-btn" data-module="section-mess">
+                    🍽️ Mess & Meals
+                </button>
+                <button type="button" class="module-pill-btn" data-module="section-sports-lab">
+                    🏸 Sports & Labs
+                </button>
+                <button type="button" class="module-pill-btn" data-module="section-daily">
+                    📋 Attendance & Leave
+                </button>
+                <button type="button" class="module-pill-btn" data-module="section-notices">
+                    📢 Notices & Complaints
+                </button>
+            </div>
+        </nav>
+
+        <!-- ================================================================= -->
+        <!-- MODULE 1: WASHING MACHINES (PRESERVED 100% UNCHANGED)              -->
+        <!-- ================================================================= -->
+        <div id="section-laundry" class="hostel-module-section active">
+            <!-- KPI Summary Cards -->
+            <section class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon available">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="kpi-info">
+                        <h3 id="kpi-available-count">4 / 4</h3>
+                        <p>Machines Available</p>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon busy">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                    <div class="kpi-info">
+                        <h3 id="kpi-inuse-count">0</h3>
+                        <p>Washing In Progress</p>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon primary">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                    </div>
+                    <div class="kpi-info">
+                        <h3 id="kpi-today-bookings">0</h3>
+                        <p>Bookings Today</p>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon warning">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 14 14"></polyline>
+                        </svg>
+                    </div>
+                    <div class="kpi-info">
+                        <h3>75 Min</h3>
+                        <p>Strict Fixed Slot Limit</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Hostel Laundry Notice Board / Announcement Banner -->
+            <section id="hostel-notice-board" class="notice-board-container" style="display: none;">
+                <div id="notice-card" class="notice-card info">
+                    <div class="notice-card-inner">
+                        <div class="notice-icon-circle">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                        </div>
+                        <div class="notice-text-content">
+                            <div class="notice-top-row">
+                                <span class="notice-badge">📢 हॉस्टेल सूचना • OFFICIAL NOTICE</span>
+                                <span id="notice-date-time" class="notice-timestamp">Just now</span>
+                            </div>
+                            <h4 id="notice-headline" class="notice-headline">Hostel Laundry Notice</h4>
+                            <p id="notice-message" class="notice-message"></p>
+                            <div class="notice-meta-row">
+                                <span id="notice-signed" class="notice-signer">By: Hostel In-Charge (7447642019)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 7-Day Date Selector Bar with Interactive Calendar Picker -->
+            <section class="date-selector-bar">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;">
+                    <div class="date-selector-title" style="margin-bottom: 0;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        <span>Select Booking Date (Today & Next 6 Days)</span>
+                        <span id="date-schedule-pill" style="margin-left: 8px; font-size: 0.72rem; background: var(--primary-light); color: var(--primary-color); padding: 3px 8px; border-radius: 4px; font-weight: 700;"></span>
+                    </div>
+                    <div class="calendar-picker-box">
+                        <label for="booking-calendar-input" class="calendar-picker-label">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            <span>Choose Date:</span>
+                        </label>
+                        <input type="date" id="booking-calendar-input" class="form-input calendar-date-input" title="Choose any date from calendar">
+                    </div>
+                </div>
+                <div id="date-pills-bar" class="date-pills-container">
+                    <!-- Dynamically populated with 7 rolling days -->
+                </div>
+            </section>
+
+            <!-- 4 Washing Machines Section Header -->
+            <section class="section-header">
+                <h2 class="section-title">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                        <circle cx="12" cy="13" r="5"></circle>
+                    </svg>
+                    <span>Hostel Washing Machines (4 Units • 9.0 Kg Each)</span>
+                </h2>
+                <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+                    All 4 heavy-duty 9.0 Kg machines connect to the same PostgreSQL database
+                </div>
+            </section>
+
+            <!-- 4 Washing Machines Live Grid -->
+            <main class="machines-grid" id="machines-container">
+                <!-- Machine cards rendered by script.js -->
+            </main>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- MODULE 2: GATE ENTRY & EXIT MANAGEMENT                            -->
+        <!-- ================================================================= -->
+        <div id="section-gate" class="hostel-module-section">
+            <div style="max-width: 900px; margin: 0 auto;">
+                <!-- Student Digital ID Pass -->
+                <div class="digital-id-card" id="digital-student-pass">
+                    <div class="id-card-header">
+                        <div>
+                            <span style="font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 4px;">HOSTEL RESIDENT PASS</span>
+                            <div style="font-size: 0.76rem; color: rgba(255,255,255,0.8); margin-top: 4px;">Hostel Laundry & Residential Campus</div>
+                        </div>
+                        <div id="id-card-status-badge" style="background: #10b981; color: #fff; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 999px;">ACTIVE</div>
+                    </div>
+                    <div class="id-card-body">
+                        <div class="id-photo-placeholder" id="id-card-avatar">🎓</div>
+                        <div class="id-info">
+                            <h3 id="id-card-name">Student Name</h3>
+                            <p><strong>Roll No:</strong> <span id="id-card-roll">ROLL-000</span></p>
+                            <p><strong>Room:</strong> <span id="id-card-room">Room 000</span> • <span id="id-card-block">A Block</span></p>
+                            <p><strong>Phone:</strong> <span id="id-card-phone">0000000000</span></p>
+                        </div>
+                    </div>
+                    <div class="id-card-footer">
+                        <div style="font-size: 0.7rem; color: rgba(255,255,255,0.7);">Scan at Security Gate for Entry / Exit</div>
+                        <div id="id-card-qr-box" style="width: 50px; height: 50px; background: #fff; padding: 3px; border-radius: 4px;"></div>
+                    </div>
+                </div>
+
+                <!-- Gate Quick Action Buttons -->
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <span>🚪 Gate Check-In / Check-Out (गेट नोंदणी)</span>
+                </h3>
+                <div class="gate-actions-grid">
+                    <div class="gate-action-card" id="btn-gate-entry">
+                        <div class="gate-action-icon">🟢</div>
+                        <h4 style="font-size: 1.1rem; font-weight: 800; color: #10b981; margin-bottom: 4px;">Gate Entry (आत या)</h4>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Record returning to hostel campus</p>
+                    </div>
+                    <div class="gate-action-card" id="btn-gate-exit">
+                        <div class="gate-action-icon">🔴</div>
+                        <h4 style="font-size: 1.1rem; font-weight: 800; color: #ef4444; margin-bottom: 4px;">Gate Exit (बाहेर जा)</h4>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Record leaving hostel campus</p>
+                    </div>
+                </div>
+
+                <!-- Personal Gate Activity History -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; margin-top: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <h4 style="font-size: 1rem; font-weight: 700;">🕒 Recent Gate Log History</h4>
+                        <button type="button" id="btn-refresh-gate-logs" class="btn btn-secondary" style="font-size: 0.8rem; padding: 4px 10px;">🔄 Refresh</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Action</th>
+                                    <th>Date & Time</th>
+                                    <th>Gate</th>
+                                    <th>Status</th>
+                                    <th>Distance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="student-gate-logs-tbody">
+                                <tr><td colspan="5" style="text-align:center; padding: 16px; color: var(--text-muted);">Login as student to view gate logs.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- MODULE 3: MESS MANAGEMENT                                         -->
+        <!-- ================================================================= -->
+        <div id="section-mess" class="hostel-module-section">
+            <div style="max-width: 950px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+                <!-- Today's Meal & Diet Selector -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 22px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
+                        <div>
+                            <span class="spec-badge" id="mess-today-day-badge">Today's Meal Selection</span>
+                            <h3 style="font-size: 1.25rem; font-weight: 800; margin-top: 4px;">🍽️ Daily Mess Diet Selection (दैनिक भोजन निवड)</h3>
+                        </div>
+                        <div id="mess-deadline-badge" style="font-size: 0.8rem; font-weight: 700; color: #b45309; background: #fffbeb; padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid #fde68a;">
+                            ⏱️ Lunch deadline: 11:00 AM • Dinner: 06:00 PM
+                        </div>
+                    </div>
+
+                    <!-- Meal Selection Controls -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+                        <!-- Lunch Box -->
+                        <div style="background: var(--bg-primary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4 style="font-size: 1rem; font-weight: 700;">☀️ Lunch (दुपारचे जेवण)</h4>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">12:30 PM - 02:30 PM</span>
+                            </div>
+                            <p id="today-lunch-menu" style="font-size: 0.85rem; color: var(--text-secondary); margin: 8px 0;">Loading menu...</p>
+                            <div class="mess-diet-selector" id="lunch-diet-selector">
+                                <button type="button" class="diet-toggle-btn veg active" data-meal="lunch" data-diet="veg">🥗 Veg</button>
+                                <button type="button" class="diet-toggle-btn non_veg" data-meal="lunch" data-diet="non_veg">🍗 Non-Veg</button>
+                                <button type="button" class="diet-toggle-btn skip" data-meal="lunch" data-diet="skip">❌ Skip</button>
+                            </div>
+                        </div>
+
+                        <!-- Dinner Box -->
+                        <div style="background: var(--bg-primary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4 style="font-size: 1rem; font-weight: 700;">🌙 Dinner (रात्रीचे जेवण)</h4>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">07:30 PM - 09:45 PM</span>
+                            </div>
+                            <p id="today-dinner-menu" style="font-size: 0.85rem; color: var(--text-secondary); margin: 8px 0;">Loading menu...</p>
+                            <div class="mess-diet-selector" id="dinner-diet-selector">
+                                <button type="button" class="diet-toggle-btn veg active" data-meal="dinner" data-diet="veg">🥗 Veg</button>
+                                <button type="button" class="diet-toggle-btn non_veg" data-meal="dinner" data-diet="non_veg">🍗 Non-Veg</button>
+                                <button type="button" class="diet-toggle-btn skip" data-meal="dinner" data-diet="skip">❌ Skip</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mess Counter Attendance Action -->
+                    <div style="margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <div style="font-size: 0.88rem; font-weight: 700;">QR Mess Attendance Verification</div>
+                            <div style="font-size: 0.78rem; color: var(--text-muted);">Scan at mess counter to verify meal entry. Physical mess presence required.</div>
+                        </div>
+                        <button type="button" id="btn-mess-checkin" class="btn btn-primary" style="padding: 10px 20px;">
+                            <span>📱 Scan Mess Attendance</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 7-Day Weekly Mess Menu Table -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px;">
+                    <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 12px;">📅 Official Weekly Hostel Mess Menu</h3>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Day</th>
+                                    <th>Breakfast (नाश्ता)</th>
+                                    <th>Lunch (दुपारचे जेवण)</th>
+                                    <th>Dinner (रात्रीचे जेवण)</th>
+                                    <th>Special Dish</th>
+                                </tr>
+                            </thead>
+                            <tbody id="weekly-mess-menu-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- MODULE 4: SPORTS & LABORATORY MANAGEMENT                          -->
+        <!-- ================================================================= -->
+        <div id="section-sports-lab" class="hostel-module-section">
+            <div style="max-width: 950px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+                <!-- Sub-Tabs: Sports vs Labs -->
+                <div style="display: flex; gap: 10px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">
+                    <button type="button" id="tab-btn-sports" class="module-pill-btn active" style="font-size: 0.95rem;">
+                        🏸 Sports Facilities & Equipment
+                    </button>
+                    <button type="button" id="tab-btn-labs" class="module-pill-btn" style="font-size: 0.95rem;">
+                        🔬 Computer & Engineering Labs
+                    </button>
+                </div>
+
+                <!-- SUB-SECTION 1: SPORTS -->
+                <div id="sub-sports-content">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <h3 style="font-size: 1.15rem; font-weight: 800;">Hostel Sports Grounds & Courts</h3>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Cricket • Badminton • Volleyball • Kabaddi • TT</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;" id="sports-facilities-container">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <!-- Sports Equipment Inventory -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; margin-top: 24px;">
+                        <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px;">⚽ Sports Equipment Desk (किट्स व साहित्य)</h4>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Equipment Name</th>
+                                        <th>Sport</th>
+                                        <th>Total Qty</th>
+                                        <th>Available</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sports-equipment-tbody">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-SECTION 2: LABS -->
+                <div id="sub-labs-content" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <h3 style="font-size: 1.15rem; font-weight: 800;">Hostel Laboratories & Innovation Hubs</h3>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Open 08:00 AM - 08:00 PM</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;" id="labs-facilities-container">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <!-- Lab Breakdown / Maintenance Complaint Box -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; margin-top: 20px;">
+                        <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 8px;">🛠️ Report Lab PC or Equipment Issue</h4>
+                        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">Report non-functional computers, Wi-Fi issues, or lab meters directly to lab staff.</p>
+                        <form id="form-lab-complaint" style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label">Select Lab</label>
+                                    <select id="lab-complaint-lab-id" class="form-select">
+                                        <option value="1">Computer Center & Programming Lab</option>
+                                        <option value="2">Electronics & IoT Innovation Lab</option>
+                                        <option value="3">Applied Physics & Chemistry Research Lab</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label">Equipment / PC ID</label>
+                                    <input type="text" id="lab-complaint-equip" class="form-input" placeholder="उदा. PC-14 / CRO-02" required>
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Issue Description</label>
+                                <textarea id="lab-complaint-desc" class="form-input" rows="2" placeholder="तक्रारीचे वर्णन..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="align-self: flex-start;">
+                                Submit Lab Complaint
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- MODULE 5: ATTENDANCE, REMINDERS & LEAVE                           -->
+        <!-- ================================================================= -->
+        <div id="section-daily" class="hostel-module-section">
+            <div style="max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+                <!-- Morning Attendance & Wake-Up Row -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+                    <!-- Morning Attendance Check-In Card -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px;">
+                        <span class="spec-badge" style="background: #eef2ff; color: #4338ca;">06:00 AM - 08:30 AM</span>
+                        <h4 style="font-size: 1.1rem; font-weight: 800; margin: 8px 0 4px 0;">🌅 Morning Attendance (सकाळची हजेरी)</h4>
+                        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
+                            Mandatory daily morning check-in verified by hostel GPS geofence.
+                        </p>
+                        <div id="morning-attendance-status-box" style="padding: 10px; background: var(--bg-primary); border-radius: var(--radius-sm); font-size: 0.85rem; margin-bottom: 14px;">
+                            Status: <strong id="morning-att-status-text">Not Checked In Today</strong>
+                        </div>
+                        <button type="button" id="btn-morning-checkin" class="btn btn-primary" style="width: 100%;">
+                            <span>📍 Mark Morning Attendance</span>
+                        </button>
+                    </div>
+
+                    <!-- Wake-Up Alarm Reminder Card -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px;">
+                        <span class="spec-badge" style="background: #fef3c7; color: #b45309;">Personal Alarm</span>
+                        <h4 style="font-size: 1.1rem; font-weight: 800; margin: 8px 0 4px 0;">⏰ Wake-Up Reminder (गजर व स्मरणपत्र)</h4>
+                        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">
+                            Set your daily morning wake-up alarm with audible notification.
+                        </p>
+                        <div class="form-group" style="margin-bottom: 8px;">
+                            <label class="form-label">Set Alarm Time</label>
+                            <input type="time" id="wakeup-alarm-time" class="form-input" value="06:00">
+                        </div>
+                        <div class="alarm-toggle-container">
+                            <span style="font-size: 0.85rem; font-weight: 700;">Wake-Up Reminder Sound</span>
+                            <input type="checkbox" id="wakeup-alarm-toggle" style="width: 20px; height: 20px; cursor: pointer;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hostel Leave Application Card -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 22px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <div>
+                            <h3 style="font-size: 1.15rem; font-weight: 800;">📝 Leave Application (रजा अर्ज)</h3>
+                            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">Apply for home visits, medical leave, or college tours with Warden approval.</p>
+                        </div>
+                        <button type="button" id="btn-open-leave-modal" class="btn btn-primary" style="font-size: 0.82rem;">
+                            + Apply Leave
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Dates</th>
+                                    <th>Destination</th>
+                                    <th>Reason</th>
+                                    <th>Parent Contact</th>
+                                    <th>Status</th>
+                                    <th>Warden Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody id="student-leave-tbody">
+                                <tr><td colspan="6" style="text-align:center; padding: 16px; color: var(--text-muted);">No leave applications found.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- MODULE 6: NOTICES, COMPLAINTS & DIRECTORY                         -->
+        <!-- ================================================================= -->
+        <div id="section-notices" class="hostel-module-section">
+            <div style="max-width: 950px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+                <!-- Maintenance Complaints Section -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 22px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <div>
+                            <h3 style="font-size: 1.15rem; font-weight: 800;">🛠️ Maintenance Complaints (दुरुस्ती तक्रार)</h3>
+                            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">Report issues with Water, Electricity, Wi-Fi, Furniture, or Cleanliness.</p>
+                        </div>
+                        <button type="button" id="btn-open-complaint-modal" class="btn btn-primary" style="font-size: 0.82rem;">
+                            + Lodge Complaint
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Title</th>
+                                    <th>Room</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="student-complaints-tbody">
+                                <tr><td colspan="6" style="text-align:center; padding: 16px; color: var(--text-muted);">No complaints lodged yet.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Emergency Contacts Directory -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 22px;">
+                    <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px; color: #dc2626;">
+                        🚨 Hostel 24x7 Emergency Contact Directory
+                    </h3>
+                    <div class="emergency-grid" id="emergency-directory-grid">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- End app-container -->
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 1: Student 75-Minute Slot Booking Modal (Preserved)             -->
+    <!-- ===================================================================== -->
+    <div id="booking-modal" class="modal-backdrop">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                    </svg>
+                    <span id="booking-modal-title">Book 75-Minute Washing Slot</span>
+                </h3>
+                <button type="button" class="modal-close-btn" data-close="booking-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="background-color: var(--primary-light); padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.85rem; color: var(--primary-color); font-weight: 600; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span>ℹ️</span>
+                        <span>Slots are strictly 75 minutes. Overlap is strictly prevented by PostgreSQL database constraints.</span>
+                    </div>
+                    <span id="bm-schedule-badge" style="font-size: 0.76rem; font-weight: 700; background: #ffffff; color: var(--primary-color); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border-color);"></span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="form-group">
+                        <label class="form-label">Selected Machine</label>
+                        <input type="text" id="bm-machine-name" class="form-input" readonly>
+                        <input type="hidden" id="bm-machine-id">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Selected Date</label>
+                        <input type="date" id="bm-date" class="form-input" readonly>
+                    </div>
+                </div>
+
+                <!-- 75-Minute Discrete Slots Grid -->
+                <div class="form-group">
+                    <label class="form-label">Choose 75-Minute Time Slot</label>
+                    <div id="bm-slots-grid" class="slots-modal-grid">
+                        <!-- Populated by script.js -->
+                    </div>
+                    <input type="hidden" id="bm-selected-start-iso">
+                    <input type="hidden" id="bm-selected-end-iso">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="form-group">
+                        <label class="form-label">Student Full Name *</label>
+                        <input type="text" id="bm-student-name" class="form-input" placeholder="e.g. Narendra Panchal" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Roll Number / Room *</label>
+                        <input type="text" id="bm-student-roll" class="form-input" placeholder="e.g. 302" required>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="form-group">
+                        <label class="form-label">Phone Number *</label>
+                        <input type="tel" id="bm-student-phone" class="form-input" placeholder="e.g. 9404673711" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address (Optional)</label>
+                        <input type="email" id="bm-student-email" class="form-input" placeholder="student@example.com">
+                    </div>
+                </div>
+
+                <div id="bm-error-box" style="display: none; padding: 10px 14px; background-color: var(--busy-light); border: 1px solid var(--busy-border); color: var(--busy-color); border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 500;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-close="booking-modal">Cancel</button>
+                <button type="button" id="btn-confirm-booking" class="btn btn-primary">
+                    <span>Confirm 75-Min Booking</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 2: Booking Confirmation Pass Modal (Preserved)                  -->
+    <!-- ===================================================================== -->
+    <div id="booking-success-modal" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">🎉 Booking Confirmed!</h3>
+                <button type="button" class="modal-close-btn" data-close="booking-success-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <div class="digital-pass-card" id="digital-pass-capture-area">
+                    <div class="pass-header">
+                        <span class="pass-badge">OFFICIAL LAUNDRY PASS</span>
+                        <h4 class="pass-title" id="bsm-machine-title">Machine 1 (Bay 1)</h4>
+                        <p class="pass-ref">Ref: <strong id="bsm-reference-code">WM1-XXXXXX</strong></p>
+                    </div>
+
+                    <div class="pass-qr-wrapper">
+                        <div id="bsm-qr-code"></div>
+                    </div>
+
+                    <div class="pass-details-grid">
+                        <div class="pass-detail-item">
+                            <span class="p-label">Date:</span>
+                            <span class="p-val" id="bsm-date">--</span>
+                        </div>
+                        <div class="pass-detail-item">
+                            <span class="p-label">Slot:</span>
+                            <span class="p-val" id="bsm-time-slot">--</span>
+                        </div>
+                        <div class="pass-detail-item">
+                            <span class="p-label">Student:</span>
+                            <span class="p-val" id="bsm-student-name">--</span>
+                        </div>
+                        <div class="pass-detail-item">
+                            <span class="p-label">Roll/Room:</span>
+                            <span class="p-val" id="bsm-student-roll">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;">
+                    <button type="button" id="btn-save-ticket-gallery" class="btn btn-primary" style="flex: 2; min-width: 180px;">
+                        <span>📥 Save Pass to Gallery</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-close="booking-success-modal" style="flex: 1;">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 3: 4 Machine QR Codes Modal (Preserved)                         -->
+    <!-- ===================================================================== -->
+    <div id="all-qr-modal" class="modal-backdrop">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">📱 4 Washing Machine QR Code Stickers</h3>
+                <button type="button" class="modal-close-btn" data-close="all-qr-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="qr-cards-grid" id="all-qr-container">
+                    <!-- 4 machine QR code cards rendered here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btn-print-all-stickers" class="btn btn-primary">
+                    🖨️ Print All 4 Machine Stickers
+                </button>
+                <button type="button" class="btn btn-secondary" data-close="all-qr-modal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 4: Student Authentication Modal (Login & Register)             -->
+    <!-- ===================================================================== -->
+    <div id="student-auth-modal" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title" id="student-auth-modal-title">🎓 Student Portal</h3>
+                <button type="button" class="modal-close-btn" data-close="student-auth-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Sub Tabs: Sign In vs Sign Up -->
+                <div style="display: flex; gap: 8px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 14px;">
+                    <button type="button" id="btn-tab-student-login" class="module-pill-btn active" style="flex: 1; text-align: center;">Sign In</button>
+                    <button type="button" id="btn-tab-student-register" class="module-pill-btn" style="flex: 1; text-align: center;">Create Account</button>
+                </div>
+
+                <!-- Sign In Form -->
+                <form id="form-student-login" style="display: flex; flex-direction: column; gap: 12px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Email or Roll Number</label>
+                        <input type="text" id="student-login-id" class="form-input" placeholder="e.g. 302 or student@example.com" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="student-login-password" class="form-input" placeholder="••••••••" required>
+                    </div>
+                    <div id="student-login-error" style="display: none; padding: 8px 12px; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: var(--radius-sm); font-size: 0.82rem;"></div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 6px;">Sign In to Student Portal</button>
+                </form>
+
+                <!-- Sign Up Form -->
+                <form id="form-student-register" style="display: none; flex-direction: column; gap: 10px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" id="reg-student-name" class="form-input" placeholder="e.g. Narendra Panchal" required>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Roll Number *</label>
+                            <input type="text" id="reg-student-roll" class="form-input" placeholder="e.g. 302" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Room Number *</label>
+                            <input type="text" id="reg-student-room" class="form-input" placeholder="e.g. B-204" required>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Phone Number *</label>
+                            <input type="tel" id="reg-student-phone" class="form-input" placeholder="9404673711" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Hostel Block</label>
+                            <select id="reg-student-block" class="form-select">
+                                <option value="A Block">A Block</option>
+                                <option value="B Block">B Block</option>
+                                <option value="C Block">C Block</option>
+                                <option value="Girls Wing">Girls Wing</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Email Address *</label>
+                        <input type="email" id="reg-student-email" class="form-input" placeholder="student@example.com" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Password * (Min 6 characters)</label>
+                        <input type="password" id="reg-student-password" class="form-input" placeholder="••••••••" minlength="6" required>
+                    </div>
+                    <div id="student-register-error" style="display: none; padding: 8px 12px; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: var(--radius-sm); font-size: 0.82rem;"></div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 6px;">Create Resident Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 5: Universal Camera QR Scanner Modal                            -->
+    <!-- ===================================================================== -->
+    <div id="qr-scanner-modal" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">📷 Scan Facility or Machine QR Code</h3>
+                <button type="button" class="modal-close-btn" data-close="qr-scanner-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+                    Point your camera at a Washing Machine, Gate, Mess, or Sports Court QR sticker.
+                </p>
+                <div id="interactive-qr-reader" style="width: 100%; max-width: 380px; margin: 0 auto; border-radius: var(--radius-md); overflow: hidden; background: #000;"></div>
+                <div id="qr-scanner-status" style="margin-top: 10px; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);">Initializing camera...</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-close="qr-scanner-modal">Stop Scanner</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 6: Emergency Directory Modal                                    -->
+    <!-- ===================================================================== -->
+    <div id="emergency-modal" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title" style="color: #dc2626;">🚨 Emergency Contacts</h3>
+                <button type="button" class="modal-close-btn" data-close="emergency-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="emergency-grid" id="modal-emergency-grid">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-close="emergency-modal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 7: Leave Application Submission Modal                           -->
+    <!-- ===================================================================== -->
+    <div id="leave-modal" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">📝 Apply for Hostel Leave</h3>
+                <button type="button" class="modal-close-btn" data-close="leave-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-leave-application" style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Start Date *</label>
+                            <input type="date" id="leave-start-date" class="form-input" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">End Date *</label>
+                            <input type="date" id="leave-end-date" class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Destination (मुक्कामाचे ठिकाण) *</label>
+                        <input type="text" id="leave-destination" class="form-input" placeholder="उदा. Home (Nanded) / Pune Exam Center" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Parent / Guardian Contact No *</label>
+                        <input type="tel" id="leave-parent-phone" class="form-input" placeholder="पालकांचा मोबाईल नंबर" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Reason for Leave (रजेचे कारण) *</label>
+                        <textarea id="leave-reason" class="form-input" rows="3" placeholder="उदा. बहिणीचे लग्न / कौटुंबिक कार्यक्रम / आजारपण" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 6px;">Submit Leave Application to Warden</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 8: Maintenance Complaint Modal                                  -->
+    <!-- ===================================================================== -->
+    <div id="complaint-modal" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">🛠️ Lodge Maintenance Complaint</h3>
+                <button type="button" class="modal-close-btn" data-close="complaint-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-complaint-submission" style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Category *</label>
+                            <select id="complaint-category" class="form-select" required>
+                                <option value="water">🚰 Water / Tap Issue</option>
+                                <option value="electricity">⚡ Electricity / Fan / Light</option>
+                                <option value="wifi">📶 Wi-Fi / Internet</option>
+                                <option value="cleanliness">🧹 Cleanliness / Washroom</option>
+                                <option value="furniture">🪑 Furniture / Cot / Cupboard</option>
+                                <option value="plumbing">🔧 Plumbing & Drainage</option>
+                                <option value="other">📌 Other General Issue</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Room Number *</label>
+                            <input type="text" id="complaint-room" class="form-input" placeholder="e.g. 302" required>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Issue Title *</label>
+                        <input type="text" id="complaint-title" class="form-input" placeholder="उदा. बाथरुममध्ये पाणी येत नाही" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Detailed Description *</label>
+                        <textarea id="complaint-description" class="form-input" rows="3" placeholder="तक्रारीचे सविस्तर वर्णन लिहा..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 6px;">Submit Complaint to Maintenance Desk</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 9: Sports Court / Ground Booking Modal                          -->
+    <!-- ===================================================================== -->
+    <div id="sports-booking-modal" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title" id="sports-booking-modal-title">🏸 Book Sports Facility</h3>
+                <button type="button" class="modal-close-btn" data-close="sports-booking-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-sports-facility-booking" style="display: flex; flex-direction: column; gap: 12px;">
+                    <input type="hidden" id="sb-facility-id">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Selected Facility</label>
+                        <input type="text" id="sb-facility-name" class="form-input" readonly>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Date *</label>
+                            <input type="date" id="sb-date" class="form-input" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Players Count</label>
+                            <input type="number" id="sb-players" class="form-input" min="1" max="22" value="2">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Start Time *</label>
+                            <input type="time" id="sb-start-time" class="form-input" value="16:00" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">End Time *</label>
+                            <input type="time" id="sb-end-time" class="form-input" value="17:00" required>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Team Name (Optional)</label>
+                        <input type="text" id="sb-team-name" class="form-input" placeholder="e.g. Hostel Warriors">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 6px;">Confirm Sports Booking</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 10: Admin / Staff Login Modal (Preserved & Enhanced)            -->
+    <!-- ===================================================================== -->
+    <div id="admin-login-modal" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">🔐 Staff & Admin Authentication</h3>
+                <button type="button" class="modal-close-btn" data-close="admin-login-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 14px;">
+                    Enter your authorized Admin or Staff ID (e.g. <code>7447642019</code> or registered email) and password.
+                </p>
+                <div class="form-group">
+                    <label class="form-label">Admin / Staff ID</label>
+                    <input type="text" id="admin-email-input" class="form-input" placeholder="7447642019 or admin@hostel.edu" value="7447642019" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="admin-password-input" class="form-input" placeholder="••••••••" autocomplete="current-password">
+                </div>
+                <div id="admin-login-error" style="display: none; padding: 10px 14px; background-color: var(--busy-light); border: 1px solid var(--busy-border); color: var(--busy-color); border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 500;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-close="admin-login-modal">Cancel</button>
+                <button type="button" id="btn-submit-admin-login" class="btn btn-primary">
+                    <span>Log In to Dashboard</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 11: Admin Control Center & Multi-Role Dashboard                 -->
+    <!-- ===================================================================== -->
+    <div id="admin-dashboard-modal" class="modal-backdrop">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span>Hostel Control Center (अ‍ॅडमिन व स्टाफ डॅशबोर्ड)</span>
+                </h3>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button type="button" id="btn-admin-logout" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">Log Out</button>
+                    <button type="button" class="modal-close-btn" data-close="admin-dashboard-modal">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <!-- Admin Navigation Tabs -->
+                <div class="admin-tabs" style="overflow-x: auto; flex-wrap: nowrap;">
+                    <button type="button" class="admin-tab-btn active" data-tab="tab-manage-machines">Machines Status</button>
+                    <button type="button" class="admin-tab-btn" data-tab="tab-manage-bookings">Laundry Bookings</button>
+                    <button type="button" class="admin-tab-btn" data-tab="tab-manage-slots">🗓️ Slots</button>
+                    <button type="button" class="admin-tab-btn" data-tab="tab-gate-admin">🚪 Gate Reports</button>
+                    <button type="button" class="admin-tab-btn" data-tab="tab-mess-admin">🍽️ Mess Headcount</button>
+                    <button type="button" class="admin-tab-btn" data-tab="tab-leave-admin">📋 Leave Approvals</button>
+                    <button type="button" class="admin-tab-btn" data-tab="tab-complaints-admin">🛠️ Complaints</button>
+                    <button type="button" class="admin-tab-btn" data-tab="tab-geofence-admin">📍 Geofence Settings</button>
+                    <button type="button" class="admin-tab-btn" data-tab="tab-notice-board">📢 Notice Board</button>
+                    <button type="button" class="admin-tab-btn" data-tab="tab-pdf-reports">PDF Reports</button>
+                    <button type="button" class="admin-tab-btn" data-tab="tab-audit-logs">🛡️ Audit Logs</button>
+                </div>
+
+                <!-- TAB 1: Machine Status & Photos -->
+                <div id="tab-manage-machines" class="admin-tab-content">
+                    <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px;">Control Machine Operational Status & Guide Photos</h4>
+                    <div id="admin-machines-list" style="display: flex; flex-direction: column; gap: 14px;">
+                        <!-- Rendered by script.js -->
+                    </div>
+                </div>
+
+                <!-- TAB 2: Bookings Management -->
+                <div id="tab-manage-bookings" class="admin-tab-content" style="display: none;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center;">
+                        <div style="display: flex; gap: 6px; flex: 1; min-width: 250px; align-items: center;">
+                            <input type="date" id="admin-bookings-date-filter" class="form-input" style="flex: 1;" title="Filter by specific date">
+                            <button type="button" id="btn-admin-clear-date" class="btn btn-secondary" title="सर्व तारखा पहा (Show All Dates)" style="padding: 6px 12px; font-size: 0.8rem; white-space: nowrap;">
+                                सर्व तारखा (All)
+                            </button>
+                        </div>
+                        <select id="admin-bookings-machine-filter" class="form-select" style="flex: 1; min-width: 150px;">
+                            <option value="all">All 4 Machines</option>
+                            <option value="1">Machine 1</option>
+                            <option value="2">Machine 2</option>
+                            <option value="3">Machine 3</option>
+                            <option value="4">Machine 4</option>
+                        </select>
+                        <input type="text" id="admin-bookings-search" class="form-input" placeholder="Search student name, roll, phone..." style="flex: 2; min-width: 200px;">
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Ref</th>
+                                    <th>Date</th>
+                                    <th>Machine</th>
+                                    <th>Time Slot</th>
+                                    <th>Student Name</th>
+                                    <th>Roll / Room</th>
+                                    <th>Contact No</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-bookings-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 3: Manage Slots & Operational Schedule -->
+                <div id="tab-manage-slots" class="admin-tab-content" style="display: none;">
+                    <div style="background-color: var(--bg-primary); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 2px;">🗓️ Manage Operational Slots & Schedule</h4>
+                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0;">
+                                    Enable or disable slots for all or individual machines.
+                                </p>
+                            </div>
+                            <div id="admin-schedule-badge" style="padding: 6px 12px; font-size: 0.82rem; font-weight: 700; background: var(--primary-light); color: var(--primary-color); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                Schedule Details
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: var(--bg-card); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Manage Date</label>
+                                <input type="date" id="admin-slots-date-picker" class="form-input">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Machine Filter</label>
+                                <select id="admin-slots-machine-filter" class="form-select">
+                                    <option value="all">All 4 Machines</option>
+                                    <option value="1">Machine 1</option>
+                                    <option value="2">Machine 2</option>
+                                    <option value="3">Machine 3</option>
+                                    <option value="4">Machine 4</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0; display: flex; align-items: flex-end;">
+                                <button type="button" id="btn-refresh-admin-slots" class="btn btn-secondary" style="width: 100%;">
+                                    🔄 Refresh Slots
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="admin-slots-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; max-height: 420px; overflow-y: auto; padding: 4px;">
+                            <!-- Rendered by script.js -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: Gate Entry/Exit Reports -->
+                <div id="tab-gate-admin" class="admin-tab-content" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                        <h4 style="font-size: 1.05rem; font-weight: 700;">🚪 Campus Gate Activity Logs</h4>
+                        <button type="button" id="btn-refresh-admin-gate" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">🔄 Refresh</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Action</th>
+                                    <th>Student</th>
+                                    <th>Roll No</th>
+                                    <th>Timestamp</th>
+                                    <th>Gate</th>
+                                    <th>Distance</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-gate-logs-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB: Mess Headcount & Reports -->
+                <div id="tab-mess-admin" class="admin-tab-content" style="display: none;">
+                    <div style="background: var(--bg-primary); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                            <h4 style="font-size: 1.05rem; font-weight: 700;">🍽️ Daily Kitchen Headcount Dashboard</h4>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="date" id="admin-mess-date" class="form-input" style="padding: 6px 10px; font-size: 0.82rem;">
+                                <select id="admin-mess-meal" class="form-select" style="padding: 6px 10px; font-size: 0.82rem;">
+                                    <option value="lunch">Lunch</option>
+                                    <option value="dinner">Dinner</option>
+                                </select>
+                                <button type="button" id="btn-calc-mess-headcount" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem;">View Count</button>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;">
+                            <div class="kpi-card">
+                                <div class="kpi-info">
+                                    <h3 id="admin-mess-veg-count" style="color: #10b981;">0</h3>
+                                    <p>🥗 Total Veg Meals</p>
+                                </div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-info">
+                                    <h3 id="admin-mess-nonveg-count" style="color: #ef4444;">0</h3>
+                                    <p>🍗 Total Non-Veg Meals</p>
+                                </div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-info">
+                                    <h3 id="admin-mess-skip-count" style="color: #64748b;">0</h3>
+                                    <p>❌ Skipping Meal</p>
+                                </div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-info">
+                                    <h3 id="admin-mess-attended-count" style="color: #4f46e5;">0</h3>
+                                    <p>✅ Attended / Served</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: Leave Approvals -->
+                <div id="tab-leave-admin" class="admin-tab-content" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="font-size: 1.05rem; font-weight: 700;">📋 Warden Leave Applications Review</h4>
+                        <button type="button" id="btn-refresh-admin-leave" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">🔄 Refresh</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Roll / Room</th>
+                                    <th>Dates</th>
+                                    <th>Destination</th>
+                                    <th>Parent Phone</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                    <th>Review Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-leave-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB: Maintenance Complaints Tracking -->
+                <div id="tab-complaints-admin" class="admin-tab-content" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="font-size: 1.05rem; font-weight: 700;">🛠️ Maintenance Complaints Resolution</h4>
+                        <button type="button" id="btn-refresh-admin-complaints" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">🔄 Refresh</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Student & Room</th>
+                                    <th>Title & Description</th>
+                                    <th>Reported</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-complaints-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB: Geofence Settings & Campus Coordinates -->
+                <div id="tab-geofence-admin" class="admin-tab-content" style="display: none;">
+                    <div style="background: var(--bg-primary); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color); max-width: 650px;">
+                        <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 4px;">📍 Hostel Geofence & Boundary Settings</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 14px;">
+                            Configure the physical latitude, longitude, and permitted radius for hostel attendance and facility actions.
+                        </p>
+                        <form id="form-geofence-settings" style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label">Hostel Latitude (अक्षांश)</label>
+                                    <input type="number" step="any" id="cfg-hostel-lat" class="form-input" value="19.8762" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label">Hostel Longitude (रेखांश)</label>
+                                    <input type="number" step="any" id="cfg-hostel-lng" class="form-input" value="75.3433" required>
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label">Geofence Radius (Meters)</label>
+                                    <input type="number" id="cfg-hostel-radius" class="form-input" value="100" min="20" max="1000" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0; display: flex; align-items: flex-end;">
+                                    <button type="button" id="btn-use-current-gps" class="btn btn-secondary" style="width: 100%; font-size: 0.8rem;">
+                                        📍 Use Current GPS as Center
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 6px 0; font-size: 0.88rem; font-weight: 700;">
+                                    <input type="checkbox" id="cfg-geofence-enforced" checked style="width: 18px; height: 18px;">
+                                    <span>Enforce Geofence Restriction Server-Side</span>
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="align-self: flex-start; margin-top: 6px;">
+                                Save Geofence Configuration
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- TAB: Date-Wise PDF Report Downloader -->
+                <div id="tab-pdf-reports" class="admin-tab-content" style="display: none;">
+                    <div style="background-color: var(--bg-primary); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 14px;">
+                        <h4 style="font-size: 1rem; font-weight: 700;">Generate Official Daily Facility Report (PDF)</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                            Generates a branded audit PDF report containing machine utilization metrics, confirmed vs cancelled counts, full student booking logs, and official sign-off boxes.
+                        </p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                            <div class="form-group">
+                                <label class="form-label">Select Report Date</label>
+                                <input type="date" id="pdf-report-date" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Filter Machine</label>
+                                <select id="pdf-report-machine-filter" class="form-select">
+                                    <option value="all">All 4 Machines</option>
+                                    <option value="1">Machine 1</option>
+                                    <option value="2">Machine 2</option>
+                                    <option value="3">Machine 3</option>
+                                    <option value="4">Machine 4</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" id="btn-download-pdf-report" class="btn btn-primary" style="align-self: flex-start;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>Download PDF Audit Report</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB: Notice Board / Admin Notepad -->
+                <div id="tab-notice-board" class="admin-tab-content" style="display: none;">
+                    <div style="background-color: var(--bg-primary); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 14px;">
+                        <div>
+                            <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 4px;">📝 Hostel Notice Board / Notepad (सूचना फलक)</h4>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                                इथे लिहिलेली सूचना सर्व विद्यार्थ्यांच्या मोबाईलवर मुख्य स्क्रीनवर तात्काळ (Live Sync) दिसेल.
+                            </p>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Notice Title (सूचनेचे शीर्षक)</label>
+                            <input type="text" id="admin-notice-title" class="form-input" placeholder="उदा. वॉशिंग मशीन सूचना / पाणी पुरवठा" value="Hostel Laundry Notice / सूचना">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Notice Content / Note (सूचनेचा संपूर्ण मजकूर)</label>
+                            <textarea id="admin-notice-content" class="form-input" rows="4" placeholder="विद्यार्थ्यांसाठी महत्त्वाची सूचना इथे लिहा..."></textarea>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Urgency / Type (प्राधान्य)</label>
+                                <select id="admin-notice-priority" class="form-select">
+                                    <option value="info">ℹ️ Normal Info (सामान्य - Blue)</option>
+                                    <option value="warning">⚠️ Alert / Maintenance (सावधान - Amber)</option>
+                                    <option value="urgent">🚨 Urgent Notice (तातडीची सूचना - Red)</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0; display: flex; align-items: flex-end;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 0; font-size: 0.88rem; font-weight: 600;">
+                                    <input type="checkbox" id="admin-notice-active" checked style="width: 18px; height: 18px; cursor: pointer;">
+                                    <span>Show on Portal (सक्रिय ठेवा)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button type="button" id="btn-save-notice" class="btn btn-primary" style="flex: 2; min-width: 180px;">
+                                <span>🚀 Publish Notice (सूचना सर्वांना पाठवा)</span>
+                            </button>
+                            <button type="button" id="btn-clear-notice" class="btn btn-secondary" style="flex: 1; min-width: 130px;">
+                                <span>🗑️ Clear Notice (हटवा)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: Security Audit Trail -->
+                <div id="tab-audit-logs" class="admin-tab-content" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 2px;">🛡️ Tamper-Evident Security Audit Trail</h4>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0;">
+                                Immutable log of all administrative actions, machine updates, notices, and booking events.
+                            </p>
+                        </div>
+                        <button type="button" id="btn-refresh-audit-logs" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">
+                            🔄 Refresh Logs
+                        </button>
+                    </div>
+
+                    <div style="overflow-x: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md); max-height: 400px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left;">
+                            <thead style="background-color: var(--bg-primary); position: sticky; top: 0; z-index: 1;">
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <th style="padding: 10px 12px;">Timestamp</th>
+                                    <th style="padding: 10px 12px;">Action</th>
+                                    <th style="padding: 10px 12px;">Target</th>
+                                    <th style="padding: 10px 12px;">Performer</th>
+                                    <th style="padding: 10px 12px;">Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-audit-logs-tbody">
+                                <tr>
+                                    <td colspan="5" style="padding: 20px; text-align: center; color: var(--text-muted);">
+                                        Click to load audit logs...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 12: Supabase Connection Setup Modal (Preserved)                 -->
+    <!-- ===================================================================== -->
+    <div id="setup-modal" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title">⚙️ Connect Supabase PostgreSQL Database</h3>
+                <button type="button" class="modal-close-btn" data-close="setup-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                    Enter your Supabase project credentials from <strong>Supabase Dashboard &gt; Project Settings &gt; API</strong>.
+                </p>
+                <div class="form-group">
+                    <label class="form-label">Project URL</label>
+                    <input type="url" id="setup-supabase-url" class="form-input" placeholder="https://xyzcompany.supabase.co">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Anon Public Key</label>
+                    <input type="text" id="setup-supabase-anon-key" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                    <span class="form-help">Safe for browser client-side queries. Never enter service_role key here.</span>
+                </div>
+                <div id="setup-test-result" style="display: none; padding: 10px; border-radius: var(--radius-sm); font-size: 0.85rem;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btn-test-supabase-conn" class="btn btn-secondary">Test Connection</button>
+                <button type="button" id="btn-save-supabase-conn" class="btn btn-primary">Save & Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Application Controller Scripts -->
+    <script src="js/config.js?v=5.0"></script>
+    <script src="js/supabaseClient.js?v=5.0"></script>
+    <script src="js/locationService.js?v=5.0"></script>
+    <script src="js/authService.js?v=5.0"></script>
+    <script src="js/bookingService.js?v=5.0"></script>
+    <script src="js/hostelService.js?v=5.0"></script>
+    <script src="js/adminService.js?v=5.0"></script>
+    <script src="js/qrService.js?v=5.0"></script>
+    <script src="script.js?v=5.0"></script>
+</body>
+</html>
