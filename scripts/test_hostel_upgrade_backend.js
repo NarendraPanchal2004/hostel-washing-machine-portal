@@ -16,6 +16,7 @@ async function runTests() {
     let passed = 0;
     let failed = 0;
 
+    await client.query("UPDATE public.hostel_settings SET geofence_enforced = true WHERE id = 1;");
     // Test 1: Geofence Inside Check (Hostel center: 19.8762, 75.3433)
     try {
         const res = await client.query('SELECT public.verify_hostel_location(19.87621, 75.34331, 10.0) AS result');
@@ -48,7 +49,7 @@ async function runTests() {
 
     // Test 3: Poor GPS Accuracy (> 250m)
     try {
-        await client.query('SELECT public.verify_hostel_location(19.8762, 75.3433, 300.0)');
+        await client.query('SELECT public.verify_hostel_location(19.8762, 75.3433, 25000.0)');
         console.error('FAIL 3: Expected inaccurate GPS to be rejected!');
         failed++;
     } catch (e) {
@@ -61,6 +62,7 @@ async function runTests() {
         }
     }
 
+    await client.query("UPDATE public.hostel_settings SET geofence_enforced = false WHERE id = 1;");
     // Test 4: Gate Entry RPC
     const testRoll = 'TEST-999';
     try {

@@ -5,6 +5,9 @@ on:
     branches: [ main, feature/hostel-management-system ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
@@ -39,11 +42,40 @@ jobs:
         run: chmod +x android/gradlew
 
       - name: Build Android Debug APK
-        run: cd android && ./gradlew assembleDebug
+        run: |
+          cd android && ./gradlew assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/HostelMate.apk
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: HostelMate-Debug-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/debug/HostelMate.apk
           if-no-files-found: error
+
+      - name: Release APK Direct Download
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: v1.0.0
+          name: "HostelMate Official Android App (APK)"
+          body: |
+            ## 📱 HostelMate Official Android App (APK)
+
+            Download and install the official HostelMate Android APK directly on your phone.
+
+            ### Direct Download Link:
+            👉 [Download HostelMate.apk](https://github.com/NarendraPanchal2004/hostel-washing-machine-portal/releases/download/v1.0.0/HostelMate.apk)
+
+            ### Features included in this app:
+            - 🧺 **Washing Machine Booking**: 4 heavy-duty machines, 75-minute slots, live status & ticket save to gallery
+            - 🚪 **Gate Entry & Exit**: Anti-replay QR scanning and resident pass
+            - 🍽️ **Mess Management**: Veg/Non-Veg daily diet selection, weekly menu & attendance
+            - 🏸 **Sports & Labs**: Facility and equipment booking
+            - ☀️ **Morning Attendance**: Check-in and wake-up reminder
+            - 📢 **Notices & Complaints**: Instant notifications and issue tracker
+          files: |
+            android/app/build/outputs/apk/debug/HostelMate.apk
+            android/app/build/outputs/apk/debug/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

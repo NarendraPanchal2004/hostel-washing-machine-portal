@@ -136,6 +136,8 @@ const BookingService = (function () {
                 label: i === 0 ? `Today (${monthDay})` : i === 1 ? `Tomorrow (${monthDay})` : `${weekday}, ${monthDay}`,
                 shortLabel: i === 0 ? 'Today' : weekday,
                 subLabel: monthDay,
+                dayName: i === 0 ? 'Today' : weekday,
+                formattedDate: monthDay,
                 isWeekend: sched.isWeekend,
                 operatingHours: sched.operatingHoursText
             });
@@ -175,13 +177,16 @@ const BookingService = (function () {
             const isPast = startObj < now;
             const labelSuffix = dayOffset ? ' (Next Day)' : '';
 
+            const slotLabel = `${formatTime12h(startStr)} - ${formatTime12h(endStr)}${labelSuffix}`;
+
             slots.push({
                 slotIndex: index + 1,
                 startTime: startStr,
                 endTime: endStr,
                 startISO: startObj.toISOString(),
                 endISO: endObj.toISOString(),
-                label: `${formatTime12h(startStr)} - ${formatTime12h(endStr)}${labelSuffix}`,
+                label: slotLabel,
+                displayTime: slotLabel,
                 isPast,
                 isNextDay: Boolean(dayOffset),
                 durationMinutes: SLOT_DURATION_MINUTES
@@ -338,7 +343,7 @@ const BookingService = (function () {
             } else if (isHardOffline) {
                 status = machineInfo.status;
             } else if (matchedBooking) {
-                status = 'booked';
+                status = 'busy';
             } else if (slot.isPast) {
                 status = 'past';
             }
@@ -347,6 +352,7 @@ const BookingService = (function () {
                 ...slot,
                 status,
                 isAvailable: status === 'available',
+                isBusy: status === 'busy',
                 isDisabledByAdmin: Boolean(matchedDisabled),
                 blockReason,
                 bookingId: matchedBooking ? matchedBooking.id : null
@@ -366,8 +372,10 @@ const BookingService = (function () {
         studentPhone,
         studentEmail,
         dateStr,
+        bookingDate,
         startTimeISO
     }) {
+        const chosenDate = dateStr || bookingDate;
         const client = window.SupabaseManager.getClient();
         const startObj = new Date(startTimeISO);
         const endObj = new Date(startObj.getTime() + SLOT_DURATION_MINUTES * 60 * 1000);
@@ -384,15 +392,15 @@ const BookingService = (function () {
         // 2. Validate rolling 7-day range
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const bookingDate = new Date(`${dateStr}T00:00:00`);
+        const bookingDateObj = new Date(`${chosenDate}T00:00:00`);
         const maxDate = new Date(today);
         maxDate.setDate(today.getDate() + 30);
 
-        if (bookingDate < today) {
+        if (bookingDateObj < today) {
             throw new Error('You cannot book slots for past dates.');
         }
 
-        if (bookingDate > maxDate) {
+        if (bookingDateObj > maxDate) {
             throw new Error('Bookings are restricted to the next 30 days.');
         }
 
@@ -763,19 +771,59 @@ const BookingService = (function () {
         return activeCycles;
     }
 
+    async function getMachinesWithStatus(dateStr) {
+        const machines = await getMachines();
+        return Promise.all(machines.map(async m => {
+            try {
+                const slots = await getMachineSlotAvailability(m.id, dateStr, m);
+                const activeCycle = await getMachineActiveCycle(m.id);
+                let currentStatus = m.status || 'available';
+                if (currentStatus === 'available' && activeCycle && activeCycle.isActive) {
+                    currentStatus = 'busy';
+                }
+                return {
+                    ...m,
+                    status: currentStatus,
+                    slots: slots,
+                    activeCycle
+                };
+            } catch (err) {
+                console.warn('Error enriching machine ' + m.id, err);
+                return {
+                    ...m,
+                    slots: generateStandardSlotsForDate(dateStr)
+                };
+            }
+        }));
+    }
+
     return {
         SLOT_DURATION_MINUTES,
         STANDARD_SLOT_STARTS,
         WEEKDAY_SLOT_STARTS,
         WEEKEND_SLOT_STARTS,
         getBookingDateRange,
+        getRollingSevenDays: getBookingDateRange,
         getScheduleForDate,
+        getScheduleDetails: (dateStr) => {
+            const s = getScheduleForDate(dateStr);
+            return {
+                label: s.name,
+                start: s.slotStarts[0],
+                end: s.slotStarts[s.slotStarts.length - 1],
+                ...s
+            };
+        },
+        isExtendedSchedule: (dateStr) => getScheduleForDate(dateStr).isWeekend,
         generateStandardSlotsForDate,
         getMachines,
+        getMachinesWithStatus,
         getMachineSlotAvailability,
+        getSlotsForMachineDate: getMachineSlotAvailability,
         getAllBookingsForDate,
         getAllActiveCycles,
         bookWashingSlot,
+        createBooking: bookWashingSlot,
         getMachineActiveCycle
     };
 })();

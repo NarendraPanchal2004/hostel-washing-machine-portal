@@ -1428,8 +1428,8 @@
             pill.dataset.date = day.dateStr;
 
             pill.innerHTML = `
-                <span class="day-name">${day.isToday ? 'Today' : day.dayName}</span>
-                <span class="date-num">${day.formattedDate}</span>
+                <span class="day-name pill-weekday">${day.isToday ? 'Today' : (day.shortLabel || day.dayName)}</span>
+                <span class="date-num pill-daynum">${day.subLabel || day.formattedDate}</span>
             `;
 
             pill.addEventListener('click', () => {
@@ -1606,6 +1606,7 @@
         elements.bmSelectedStartISO.value = '';
         elements.bmSelectedEndISO.value = '';
         state.selectedSlot = null;
+        if (elements.btnConfirmBooking) elements.btnConfirmBooking.disabled = true;
 
         openModal(elements.bookingModal);
 
@@ -1628,21 +1629,31 @@
         slots.forEach((slot, index) => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = `slot-button ${slot.status}`;
-            btn.disabled = (slot.status === 'busy' || slot.status === 'disabled');
+            const isBusy = (slot.status === 'busy' || slot.status === 'booked');
+            const isDisabled = (slot.status === 'disabled' || slot.status === 'offline' || slot.status === 'maintenance' || slot.status === 'past');
+            btn.className = `slot-selection-card slot-button ${slot.status}`;
+            btn.disabled = Boolean(isBusy || isDisabled);
+
+            let statusLabel = slot.status.toUpperCase();
+            if (slot.status === 'disabled' && slot.blockReason) {
+                btn.title = 'Admin Notice: ' + slot.blockReason;
+            }
 
             btn.innerHTML = `
-                <div class="slot-time-range">${slot.displayTime}</div>
-                <div class="slot-status-label">${slot.status.toUpperCase()}</div>
+                <span class="slot-time-text slot-time-range">${slot.displayTime || slot.label}</span>
+                <span class="slot-status-text slot-status-label">${statusLabel}</span>
             `;
 
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.slot-button').forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                state.selectedSlot = slot;
-                elements.bmSelectedStartISO.value = slot.startISO;
-                elements.bmSelectedEndISO.value = slot.endISO;
-            });
+            if (!isBusy && !isDisabled) {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.slot-selection-card, .slot-button').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    state.selectedSlot = slot;
+                    elements.bmSelectedStartISO.value = slot.startISO;
+                    elements.bmSelectedEndISO.value = slot.endISO;
+                    if (elements.btnConfirmBooking) elements.btnConfirmBooking.disabled = false;
+                });
+            }
 
             elements.bmSlotsGrid.appendChild(btn);
         });
