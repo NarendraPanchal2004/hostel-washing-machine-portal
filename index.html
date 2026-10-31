@@ -12,6 +12,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4f46e5">
     <link rel="stylesheet" href="style.css?v=5.0">
+    <link rel="stylesheet" href="css/mobile_app_screens.css?v=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -28,6 +29,706 @@
 </head>
 <body>
     <div class="app-container">
+
+    <!-- ================================================================= -->
+    <!-- 12-SCREEN NATIVE MOBILE APP INTERFACE (MATCHING EXACT DESIGN)     -->
+    <!-- ================================================================= -->
+    <div class="app-viewport-container" id="hostelmate-mobile-app">
+
+        <!-- 1. LOGIN SCREEN -->
+        <div id="screen-login" class="mobile-app-screen">
+            <div class="login-hero-card">
+                <img src="https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80" alt="Hostel Building" class="login-building-img">
+                <h2 class="login-app-title">Hostel Management</h2>
+                <p class="login-app-subtitle">Login to your account</p>
+            </div>
+            <form id="form-screen-login-direct" onsubmit="event.preventDefault(); ScreenNav.navigateTo('screen-dashboard');">
+                <div class="login-input-group">
+                    <span>👤</span>
+                    <input type="text" placeholder="Student ID" value="STU001">
+                </div>
+                <div class="login-input-group">
+                    <span>🔒</span>
+                    <input type="password" placeholder="Password" value="••••••••">
+                </div>
+                <button type="submit" class="btn-login-primary">Login</button>
+                <div style="text-align: center; margin: 12px 0;">
+                    <a href="javascript:void(0)" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none;">Forgot Password?</a>
+                </div>
+                <button type="button" class="login-alt-btn" onclick="ScreenNav.navigateTo('screen-dashboard')">
+                    <span>🌐</span> Login with Google
+                </button>
+                <button type="button" class="login-alt-btn" onclick="ScreenNav.navigateTo('screen-admin')">
+                    <span>🛡️</span> Admin Login
+                </button>
+                <button type="button" class="btn-login-primary" style="background: #334155; margin-top: 14px;" onclick="ScreenNav.navigateTo('screen-dashboard')">
+                    Skip to Student Dashboard →
+                </button>
+            </form>
+        </div>
+
+        <!-- 2. STUDENT DASHBOARD -->
+        <div id="screen-dashboard" class="mobile-app-screen active-screen">
+            <div class="dashboard-user-bar">
+                <div class="user-profile-left">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="Avatar" class="user-avatar-img">
+                    <div>
+                        <h3 class="user-greeting">Hello, Narendra</h3>
+                        <p class="user-meta-info">Room A-101 • ID: STU001</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-bell-notice" onclick="ScreenNav.navigateTo('screen-notices')">
+                    <span>🔔</span>
+                    <span class="bell-badge-count">2</span>
+                </button>
+            </div>
+
+            <div class="geofence-banner-card">
+                <div class="geofence-bullet"></div>
+                <div class="geofence-banner-text">
+                    <strong>You are inside hostel area</strong>
+                    <span>All facilities are available</span>
+                </div>
+            </div>
+
+            <!-- 3x4 Feature Tiles Grid -->
+            <div class="dashboard-features-grid">
+                <div class="feature-tile-btn" data-screen="screen-gate">
+                    <div class="feature-icon-circle icon-gate">🚪</div>
+                    <span class="feature-tile-title">Hostel<br>Entry/Exit</span>
+                </div>
+                <div class="feature-tile-btn" data-screen="screen-mess">
+                    <div class="feature-icon-circle icon-mess">🍽️</div>
+                    <span class="feature-tile-title">Mess</span>
+                </div>
+                <div class="feature-tile-btn" data-screen="screen-washing">
+                    <div class="feature-icon-circle icon-washing">🧺</div>
+                    <span class="feature-tile-title">Washing<br>Machine</span>
+                </div>
+                <div class="feature-tile-btn" data-screen="screen-sports">
+                    <div class="feature-icon-circle icon-sports">🏸</div>
+                    <span class="feature-tile-title">Sports</span>
+                </div>
+                <div class="feature-tile-btn" data-screen="screen-study-lab">
+                    <div class="feature-icon-circle icon-study-lab">🔬</div>
+                    <span class="feature-tile-title">Study Lab</span>
+                </div>
+                <div class="feature-tile-btn" data-screen="screen-comp-lab">
+                    <div class="feature-icon-circle icon-comp-lab">💻</div>
+                    <span class="feature-tile-title">Computer<br>Lab</span>
+                </div>
+                <div class="feature-tile-btn" data-screen="screen-attendance">
+                    <div class="feature-icon-circle icon-attendance">☀️</div>
+                    <span class="feature-tile-title">Morning<br>Attendance</span>
+                </div>
+                <div class="feature-tile-btn" data-screen="screen-notices">
+                    <div class="feature-icon-circle icon-notices">📢</div>
+                    <span class="feature-tile-title">Notices</span>
+                </div>
+                <div class="feature-tile-btn" data-screen="screen-complaints">
+                    <div class="feature-icon-circle icon-complaints">📝</div>
+                    <span class="feature-tile-title">Complaints</span>
+                </div>
+                <div class="feature-tile-btn" data-screen="screen-leave">
+                    <div class="feature-icon-circle icon-leave">🧳</div>
+                    <span class="feature-tile-title">Leave</span>
+                </div>
+                <div class="feature-tile-btn" data-screen="screen-profile">
+                    <div class="feature-icon-circle icon-profile">👤</div>
+                    <span class="feature-tile-title">Profile</span>
+                </div>
+                <div class="feature-tile-btn" data-screen="screen-help">
+                    <div class="feature-icon-circle icon-help">❓</div>
+                    <span class="feature-tile-title">Help</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. HOSTEL ENTRY / EXIT (QR SCAN) -->
+        <div id="screen-gate" class="mobile-app-screen">
+            <div class="screen-header">
+                <div class="screen-header-left">
+                    <button type="button" class="btn-screen-back" data-back="screen-dashboard">←</button>
+                    <h3 class="screen-header-title">Hostel Entry/Exit</h3>
+                </div>
+            </div>
+            <div class="screen-body">
+                <div class="geofence-banner-card" style="margin: 0 0 16px 0;">
+                    <div class="geofence-bullet"></div>
+                    <div class="geofence-banner-text">
+                        <strong>You are inside hostel area</strong>
+                        <span>Radius: 78 m (Allowed: 100 m)</span>
+                    </div>
+                </div>
+
+                <div class="pill-toggle-container">
+                    <button type="button" class="pill-toggle-btn active">Entry</button>
+                    <button type="button" class="pill-toggle-btn">Exit</button>
+                </div>
+
+                <div class="qr-viewfinder-card">
+                    <div class="qr-box-frame">
+                        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                    </div>
+                    <p class="qr-box-label">Scan Gate QR Code</p>
+                </div>
+
+                <h4 class="activity-section-title">Recent Activity</h4>
+                <div class="activity-item-card">
+                    <div class="activity-item-left">
+                        <div class="activity-badge-dot entry">🟢</div>
+                        <div>
+                            <h5 class="activity-title">Entry</h5>
+                            <p class="activity-time">15 Jun 2025, 08:12 AM</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="activity-item-card">
+                    <div class="activity-item-left">
+                        <div class="activity-badge-dot exit">🔴</div>
+                        <div>
+                            <h5 class="activity-title">Exit</h5>
+                            <p class="activity-time">14 Jun 2025, 08:45 PM</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. MESS SCREEN -->
+        <div id="screen-mess" class="mobile-app-screen">
+            <div class="screen-header">
+                <div class="screen-header-left">
+                    <button type="button" class="btn-screen-back" data-back="screen-dashboard">←</button>
+                    <h3 class="screen-header-title">Mess</h3>
+                </div>
+            </div>
+            <div class="screen-body">
+                <div style="display: flex; gap: 8px; overflow-x: auto; margin-bottom: 16px;">
+                    <button type="button" class="date-pill">Mon 16 Jun</button>
+                    <button type="button" class="date-pill">Tue 17 Jun</button>
+                    <button type="button" class="date-pill active">Wed 18 Jun</button>
+                    <button type="button" class="date-pill">Thu 19 Jun</button>
+                </div>
+
+                <h4 class="activity-section-title">Today's Menu (Wednesday)</h4>
+                <div class="mess-menu-card">
+                    <div class="mess-meal-row">
+                        <span class="mess-meal-icon">🥪</span>
+                        <div>
+                            <h5 class="mess-meal-name">Breakfast</h5>
+                            <p class="mess-meal-desc">Poha + Tea</p>
+                        </div>
+                    </div>
+                    <div class="mess-meal-row">
+                        <span class="mess-meal-icon">🍗</span>
+                        <div>
+                            <h5 class="mess-meal-name">Lunch</h5>
+                            <p class="mess-meal-desc">Chicken Curry + Rice (Special)</p>
+                        </div>
+                    </div>
+                    <div class="mess-meal-row">
+                        <span class="mess-meal-icon">🍛</span>
+                        <div>
+                            <h5 class="mess-meal-name">Dinner</h5>
+                            <p class="mess-meal-desc">Paneer + Roti</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 class="activity-section-title">Select Your Meal</h4>
+                <div class="mess-diet-choice-row">
+                    <button type="button" class="btn-diet-veg" id="screen-mess-veg-btn">🥦 Veg</button>
+                    <button type="button" class="btn-diet-nonveg active" id="screen-mess-nonveg-btn">🍗 Non-Veg</button>
+                </div>
+                <button type="button" class="btn-login-primary" style="margin-top: 0; margin-bottom: 16px;" onclick="showToast('Diet choice submitted successfully for Wednesday Lunch & Dinner!', 'success')">
+                    Submit Selection
+                </button>
+
+                <h4 class="activity-section-title">Your Selection</h4>
+                <div class="activity-item-card">
+                    <div class="activity-item-left">
+                        <span style="font-size: 1.3rem;">🍗</span>
+                        <div>
+                            <h5 class="activity-title" style="color: var(--app-red);">Non-Veg</h5>
+                            <p class="activity-time">Submitted at 08:32 AM</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. WASHING MACHINE SCREEN -->
+        <div id="screen-washing" class="mobile-app-screen">
+            <div class="screen-header">
+                <div class="screen-header-left">
+                    <button type="button" class="btn-screen-back" data-back="screen-dashboard">←</button>
+                    <h3 class="screen-header-title">Washing Machine</h3>
+                </div>
+            </div>
+            <div class="screen-body">
+                <div style="display: flex; gap: 8px; overflow-x: auto; margin-bottom: 16px;">
+                    <button type="button" class="date-pill">Mon 16</button>
+                    <button type="button" class="date-pill">Tue 17</button>
+                    <button type="button" class="date-pill active">Wed 18</button>
+                    <button type="button" class="date-pill">Thu 19</button>
+                    <button type="button" class="date-pill">Fri 20</button>
+                </div>
+
+                <div id="mobile-wm-cards-container">
+                    <!-- Machine 1 -->
+                    <div class="machine-row-card">
+                        <div class="machine-row-left">
+                            <div class="machine-row-icon available">🧺</div>
+                            <div>
+                                <h4 class="machine-row-title">Machine 1</h4>
+                                <p class="machine-row-status available">● Available</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-machine-action" onclick="openBookingModal(1)">Book</button>
+                    </div>
+
+                    <!-- Machine 2 -->
+                    <div class="machine-row-card">
+                        <div class="machine-row-left">
+                            <div class="machine-row-icon busy">🧺</div>
+                            <div>
+                                <h4 class="machine-row-title">Machine 2</h4>
+                                <p class="machine-row-status busy">● In Use (45 min left)</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-machine-action view" onclick="openBookingModal(2)">View</button>
+                    </div>
+
+                    <!-- Machine 3 -->
+                    <div class="machine-row-card">
+                        <div class="machine-row-left">
+                            <div class="machine-row-icon available">🧺</div>
+                            <div>
+                                <h4 class="machine-row-title">Machine 3</h4>
+                                <p class="machine-row-status available">● Available</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-machine-action" onclick="openBookingModal(3)">Book</button>
+                    </div>
+
+                    <!-- Machine 4 -->
+                    <div class="machine-row-card">
+                        <div class="machine-row-left">
+                            <div class="machine-row-icon maintenance">🧺</div>
+                            <div>
+                                <h4 class="machine-row-title">Machine 4</h4>
+                                <p class="machine-row-status maintenance">○ Maintenance</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-machine-action disabled" disabled>Book</button>
+                    </div>
+                </div>
+
+                <h4 class="activity-section-title" style="margin-top: 18px;">Your Booking</h4>
+                <div class="booking-confirm-summary-card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                        <div>
+                            <h4 style="margin: 0; font-size: 1rem; color: var(--app-text);">Machine 1</h4>
+                            <p style="margin: 2px 0 0 0; font-size: 0.85rem; color: var(--app-text-muted);">16 Jun 2025, 02:00 PM</p>
+                        </div>
+                        <span class="spec-badge" style="background: #ecfdf5; color: #10b981; font-weight: 700;">Confirmed</span>
+                    </div>
+                    <div style="font-size: 0.82rem; color: #64748b;">⏱️ 75 minutes slot</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. SPORTS REGISTRATION SCREEN -->
+        <div id="screen-sports" class="mobile-app-screen">
+            <div class="screen-header">
+                <div class="screen-header-left">
+                    <button type="button" class="btn-screen-back" data-back="screen-dashboard">←</button>
+                    <h3 class="screen-header-title">Sports</h3>
+                </div>
+            </div>
+            <div class="screen-body">
+                <div class="sports-subtabs-row">
+                    <button type="button" class="sports-subtab-btn active" data-sub="reg">Registration</button>
+                    <button type="button" class="sports-subtab-btn" data-sub="equip" onclick="ScreenNav.navigateTo('screen-equipment')">Equipment</button>
+                    <button type="button" class="sports-subtab-btn" data-sub="tourn" onclick="ScreenNav.navigateTo('screen-tournaments')">Tournaments</button>
+                </div>
+
+                <h4 class="activity-section-title">Sports Registration</h4>
+                <div class="sport-item-row" onclick="showToast('Registered for Cricket grounds!', 'success')">
+                    <div class="sport-item-left">
+                        <span class="sport-item-icon">🏏</span>
+                        <span class="sport-item-name">Cricket</span>
+                    </div>
+                    <span class="sport-register-arrow">Register &gt;</span>
+                </div>
+                <div class="sport-item-row" onclick="showToast('Registered for Badminton court!', 'success')">
+                    <div class="sport-item-left">
+                        <span class="sport-item-icon">🏸</span>
+                        <span class="sport-item-name">Badminton</span>
+                    </div>
+                    <span class="sport-register-arrow">Register &gt;</span>
+                </div>
+                <div class="sport-item-row" onclick="showToast('Registered for Volleyball ground!', 'success')">
+                    <div class="sport-item-left">
+                        <span class="sport-item-icon">🏐</span>
+                        <span class="sport-item-name">Volleyball</span>
+                    </div>
+                    <span class="sport-register-arrow">Register &gt;</span>
+                </div>
+                <div class="sport-item-row" onclick="showToast('Registered for Kabaddi court!', 'success')">
+                    <div class="sport-item-left">
+                        <span class="sport-item-icon">🤼</span>
+                        <span class="sport-item-name">Kabaddi</span>
+                    </div>
+                    <span class="sport-register-arrow">Register &gt;</span>
+                </div>
+                <div class="sport-item-row" onclick="showToast('Registered for Football ground!', 'success')">
+                    <div class="sport-item-left">
+                        <span class="sport-item-icon">⚽</span>
+                        <span class="sport-item-name">Football</span>
+                    </div>
+                    <span class="sport-register-arrow">Register &gt;</span>
+                </div>
+                <div class="sport-item-row" onclick="showToast('Registered for Carrom boards!', 'success')">
+                    <div class="sport-item-left">
+                        <span class="sport-item-icon">🎯</span>
+                        <span class="sport-item-name">Carrom</span>
+                    </div>
+                    <span class="sport-register-arrow">Register &gt;</span>
+                </div>
+
+                <h4 class="activity-section-title" style="margin-top: 18px;">My Registrations</h4>
+                <div class="activity-item-card">
+                    <div class="activity-item-left">
+                        <span style="font-size: 1.3rem;">🏏</span>
+                        <div>
+                            <h5 class="activity-title">Cricket (Team)</h5>
+                            <p class="activity-time">Inter Hostel Tournament</p>
+                        </div>
+                    </div>
+                    <span class="spec-badge" style="background: #ecfdf5; color: #10b981; font-weight: 700;">Approved</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. TOURNAMENT SCHEDULE SCREEN -->
+        <div id="screen-tournaments" class="mobile-app-screen">
+            <div class="screen-header">
+                <div class="screen-header-left">
+                    <button type="button" class="btn-screen-back" data-back="screen-sports">←</button>
+                    <h3 class="screen-header-title">Sports Tournament</h3>
+                </div>
+            </div>
+            <div class="screen-body">
+                <div class="sports-subtabs-row">
+                    <button type="button" class="sports-subtab-btn active">Upcoming</button>
+                    <button type="button" class="sports-subtab-btn">Ongoing</button>
+                    <button type="button" class="sports-subtab-btn">Completed</button>
+                </div>
+
+                <div class="booking-confirm-summary-card" style="margin-top: 0; margin-bottom: 14px;">
+                    <h4 style="margin: 0 0 6px 0; color: var(--app-text);">Inter Hostel Cricket Tournament</h4>
+                    <p style="margin: 0 0 4px 0; font-size: 0.82rem; color: var(--app-text-muted);">Registration: 1 Jun – 15 Jun</p>
+                    <p style="margin: 0 0 10px 0; font-size: 0.82rem; color: var(--app-text-muted);">Tournament: 20 Jun – 30 Jun</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="spec-badge" style="background: #ecfdf5; color: #10b981; font-weight: 700;">✓ Registered</span>
+                        <a href="javascript:void(0)" style="color: var(--app-blue); font-weight: 700; font-size: 0.85rem; text-decoration: none;">View Details</a>
+                    </div>
+                </div>
+
+                <div class="booking-confirm-summary-card" style="margin-top: 0;">
+                    <h4 style="margin: 0 0 6px 0; color: var(--app-text);">Badminton Championship</h4>
+                    <p style="margin: 0 0 4px 0; font-size: 0.82rem; color: var(--app-text-muted);">Registration: 5 Jun – 20 Jun</p>
+                    <p style="margin: 0 0 10px 0; font-size: 0.82rem; color: var(--app-text-muted);">Tournament: 25 Jun – 28 Jun</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <button type="button" class="btn-machine-action" onclick="showToast('Registered for Badminton Championship!', 'success')">Register</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. SPORTS EQUIPMENT SCREEN -->
+        <div id="screen-equipment" class="mobile-app-screen">
+            <div class="screen-header">
+                <div class="screen-header-left">
+                    <button type="button" class="btn-screen-back" data-back="screen-sports">←</button>
+                    <h3 class="screen-header-title">Equipment Register</h3>
+                </div>
+            </div>
+            <div class="screen-body">
+                <div class="sports-subtabs-row">
+                    <button type="button" class="sports-subtab-btn active">All</button>
+                    <button type="button" class="sports-subtab-btn">Issued</button>
+                    <button type="button" class="sports-subtab-btn">Available</button>
+                </div>
+
+                <div class="activity-item-card">
+                    <div class="activity-item-left">
+                        <span style="font-size: 1.4rem;">🏏</span>
+                        <div>
+                            <h5 class="activity-title">Cricket Bat (CB-001)</h5>
+                            <p class="activity-time">Issued to: Rahul S. • Return: 18 Jun</p>
+                        </div>
+                    </div>
+                    <span class="spec-badge" style="background: #fee2e2; color: #dc2626; font-weight: 700;">Issued</span>
+                </div>
+
+                <div class="activity-item-card">
+                    <div class="activity-item-left">
+                        <span style="font-size: 1.4rem;">🏸</span>
+                        <div>
+                            <h5 class="activity-title">Badminton Racket (BR-002)</h5>
+                            <p class="activity-time">Available: 2/5</p>
+                        </div>
+                    </div>
+                    <span class="spec-badge" style="background: #ecfdf5; color: #10b981; font-weight: 700;">Available</span>
+                </div>
+
+                <div class="activity-item-card">
+                    <div class="activity-item-left">
+                        <span style="font-size: 1.4rem;">🏐</span>
+                        <div>
+                            <h5 class="activity-title">Volleyball (VB-001)</h5>
+                            <p class="activity-time">Issued to: Amit P. • Return: 20 Jun</p>
+                        </div>
+                    </div>
+                    <span class="spec-badge" style="background: #fee2e2; color: #dc2626; font-weight: 700;">Issued</span>
+                </div>
+
+                <div class="activity-item-card">
+                    <div class="activity-item-left">
+                        <span style="font-size: 1.4rem;">🎯</span>
+                        <div>
+                            <h5 class="activity-title">Carrom Board (CA-001)</h5>
+                            <p class="activity-time">Available: 1/2</p>
+                        </div>
+                    </div>
+                    <span class="spec-badge" style="background: #ecfdf5; color: #10b981; font-weight: 700;">Available</span>
+                </div>
+
+                <button type="button" class="btn-login-primary" style="margin-top: 14px;" onclick="showToast('Equipment request submitted to Sports Warden!', 'success')">
+                    Request Equipment
+                </button>
+            </div>
+        </div>
+
+        <!-- 9. STUDY LAB SCREEN -->
+        <div id="screen-study-lab" class="mobile-app-screen">
+            <div class="screen-header">
+                <div class="screen-header-left">
+                    <button type="button" class="btn-screen-back" data-back="screen-dashboard">←</button>
+                    <h3 class="screen-header-title">Study Lab</h3>
+                </div>
+            </div>
+            <div class="screen-body">
+                <div class="geofence-banner-card" style="margin: 0 0 16px 0;">
+                    <div class="geofence-bullet"></div>
+                    <div class="geofence-banner-text">
+                        <strong>You are inside hostel area</strong>
+                    </div>
+                </div>
+
+                <div class="pill-toggle-container">
+                    <button type="button" class="pill-toggle-btn active">Entry</button>
+                    <button type="button" class="pill-toggle-btn">Exit</button>
+                </div>
+
+                <div class="qr-viewfinder-card">
+                    <div class="qr-box-frame">
+                        <span style="font-size: 3rem;">🔬</span>
+                    </div>
+                    <p class="qr-box-label">Scan Study Lab QR</p>
+                </div>
+
+                <h4 class="activity-section-title">Recent Attendance</h4>
+                <div class="activity-item-card">
+                    <div>
+                        <h5 class="activity-title">16 Jun 2025</h5>
+                        <p class="activity-time">09:00 AM – 11:30 AM</p>
+                    </div>
+                </div>
+                <div class="activity-item-card">
+                    <div>
+                        <h5 class="activity-title">14 Jun 2025</h5>
+                        <p class="activity-time">04:00 PM – 06:00 PM</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. COMPUTER LAB SCREEN -->
+        <div id="screen-comp-lab" class="mobile-app-screen">
+            <div class="screen-header">
+                <div class="screen-header-left">
+                    <button type="button" class="btn-screen-back" data-back="screen-dashboard">←</button>
+                    <h3 class="screen-header-title">Computer Lab</h3>
+                </div>
+            </div>
+            <div class="screen-body">
+                <div class="pill-toggle-container">
+                    <button type="button" class="pill-toggle-btn active">Check In</button>
+                    <button type="button" class="pill-toggle-btn">Check Out</button>
+                </div>
+
+                <div class="qr-viewfinder-card">
+                    <div class="qr-box-frame">
+                        <span style="font-size: 3rem;">💻</span>
+                    </div>
+                    <p class="qr-box-label">Scan PC QR Code</p>
+                </div>
+
+                <h4 class="activity-section-title">Active Session</h4>
+                <div class="booking-confirm-summary-card" style="margin-top: 0;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <span style="font-size: 1.8rem;">🖥️</span>
+                        <div>
+                            <h4 style="margin: 0; color: var(--app-text);">PC-05</h4>
+                            <p style="margin: 2px 0 0 0; font-size: 0.82rem; color: var(--app-text-muted);">Checked In: 10:15 AM • Duration: 1h 20m</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-login-primary" style="background: var(--app-red);" onclick="showToast('PC Session closed and checked out!', 'info')">
+                        Check Out
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 11. MORNING ATTENDANCE SCREEN -->
+        <div id="screen-attendance" class="mobile-app-screen">
+            <div class="screen-header">
+                <div class="screen-header-left">
+                    <button type="button" class="btn-screen-back" data-back="screen-dashboard">←</button>
+                    <h3 class="screen-header-title">Morning Attendance</h3>
+                </div>
+            </div>
+            <div class="screen-body">
+                <div class="geofence-banner-card" style="margin: 0 0 16px 0;">
+                    <div class="geofence-bullet"></div>
+                    <div class="geofence-banner-text">
+                        <strong>You are inside hostel area</strong>
+                    </div>
+                </div>
+
+                <div class="morning-att-hero">
+                    <h3>Good Morning! ☀️</h3>
+                    <p class="morning-att-time">Check-in Time: 16 Jun 2025, 06:45 AM</p>
+                    <button type="button" class="btn-mark-attendance" onclick="showToast('Morning attendance marked as PRESENT for today!', 'success')">
+                        Mark Attendance
+                    </button>
+                </div>
+
+                <h4 class="activity-section-title">Today's Status</h4>
+                <div class="activity-item-card">
+                    <div class="activity-item-left">
+                        <span style="font-size: 1.2rem; color: #16a34a;">✓</span>
+                        <span class="activity-title" style="color: #16a34a;">Present</span>
+                    </div>
+                    <span class="activity-time">06:45 AM</span>
+                </div>
+
+                <h4 class="activity-section-title" style="margin-top: 18px;">This Week</h4>
+                <div class="week-circles-row">
+                    <div class="day-circle-item">
+                        <span class="day-circle-label">Mon</span>
+                        <div class="day-circle-indicator present">✓</div>
+                    </div>
+                    <div class="day-circle-item">
+                        <span class="day-circle-label">Tue</span>
+                        <div class="day-circle-indicator present">✓</div>
+                    </div>
+                    <div class="day-circle-item">
+                        <span class="day-circle-label">Wed</span>
+                        <div class="day-circle-indicator present">✓</div>
+                    </div>
+                    <div class="day-circle-item">
+                        <span class="day-circle-label">Thu</span>
+                        <div class="day-circle-indicator absent">✕</div>
+                    </div>
+                    <div class="day-circle-item">
+                        <span class="day-circle-label">Fri</span>
+                        <div class="day-circle-indicator present">✓</div>
+                    </div>
+                    <div class="day-circle-item">
+                        <span class="day-circle-label">Sat</span>
+                        <div class="day-circle-indicator present">✓</div>
+                    </div>
+                    <div class="day-circle-item">
+                        <span class="day-circle-label">Sun</span>
+                        <div class="day-circle-indicator pending">•</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 12. ADMIN DASHBOARD SCREEN -->
+        <div id="screen-admin" class="mobile-app-screen">
+            <div class="screen-header">
+                <div class="screen-header-left">
+                    <button type="button" class="btn-screen-back" data-back="screen-dashboard">←</button>
+                    <h3 class="screen-header-title">Admin Dashboard</h3>
+                </div>
+            </div>
+            <div class="screen-body">
+                <div class="admin-metrics-grid">
+                    <div class="admin-tile-card blue">
+                        <span class="admin-tile-number" id="tile-stat-students">248</span>
+                        <span class="admin-tile-label">👥 Students</span>
+                    </div>
+                    <div class="admin-tile-card orange">
+                        <span class="admin-tile-number" id="tile-stat-gate">156</span>
+                        <span class="admin-tile-label">🚪 Gate Today</span>
+                    </div>
+                    <div class="admin-tile-card red">
+                        <span class="admin-tile-number" id="tile-stat-mess">210</span>
+                        <span class="admin-tile-label">🍽️ Mess Today</span>
+                    </div>
+                    <div class="admin-tile-card purple">
+                        <span class="admin-tile-number" id="tile-stat-machines">18</span>
+                        <span class="admin-tile-label">🧺 Machine Bookings</span>
+                    </div>
+                    <div class="admin-tile-card green">
+                        <span class="admin-tile-number" id="tile-stat-sports">42</span>
+                        <span class="admin-tile-label">🏸 Sports Today</span>
+                    </div>
+                    <div class="admin-tile-card cyan">
+                        <span class="admin-tile-number" id="tile-stat-labs">96</span>
+                        <span class="admin-tile-label">🔬 Lab Attendance</span>
+                    </div>
+                </div>
+
+                <div class="admin-menu-list">
+                    <div class="admin-menu-row" onclick="ScreenNav.navigateTo('screen-tournaments')">
+                        <span>🏆 Manage Tournaments</span>
+                        <span>&gt;</span>
+                    </div>
+                    <div class="admin-menu-row" onclick="ScreenNav.navigateTo('screen-equipment')">
+                        <span>🏸 Equipment Register</span>
+                        <span>&gt;</span>
+                    </div>
+                    <div class="admin-menu-row" onclick="document.getElementById('btn-download-pdf-report')?.click()">
+                        <span>📄 Reports (PDF / CSV)</span>
+                        <span>&gt;</span>
+                    </div>
+                    <div class="admin-menu-row" onclick="ScreenNav.navigateTo('screen-dashboard')">
+                        <span>📍 Hostel Location & Geofence</span>
+                        <span>&gt;</span>
+                    </div>
+                    <div class="admin-menu-row" onclick="ScreenNav.navigateTo('screen-notices')">
+                        <span>📢 Notices & Complaints</span>
+                        <span>&gt;</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
         <!-- Application Header -->
         <header class="app-header">
             <div class="header-left">
@@ -1548,6 +2249,7 @@
     <script src="js/hostelService.js?v=5.0"></script>
     <script src="js/adminService.js?v=5.0"></script>
     <script src="js/qrService.js?v=5.0"></script>
+    <script src="js/screenNavigation.js?v=1.0"></script>
     <script src="script.js?v=5.0"></script>
 </body>
 </html>

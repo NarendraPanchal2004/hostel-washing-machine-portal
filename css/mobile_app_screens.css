@@ -1,0 +1,826 @@
+/**
+ * HostelMate - 12-Screen Native Mobile App UI Styles
+ * Pixel-perfect implementation matching the modern mobile mockup design
+ */
+
+:root {
+    --app-blue: #2563eb;
+    --app-blue-hover: #1d4ed8;
+    --app-blue-light: #eff6ff;
+    --app-bg: #f8fafc;
+    --app-card-bg: #ffffff;
+    --app-text: #0f172a;
+    --app-text-muted: #64748b;
+    --app-green: #10b981;
+    --app-green-light: #ecfdf5;
+    --app-red: #ef4444;
+    --app-red-light: #fef2f2;
+    --app-orange: #f59e0b;
+    --app-orange-light: #fffbeb;
+    --app-purple: #8b5cf6;
+    --app-purple-light: #f5f3ff;
+    --app-cyan: #06b6d4;
+    --app-border: #e2e8f0;
+    --app-radius: 16px;
+    --app-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+/* Mobile Frame Wrapper */
+.app-viewport-container {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--app-bg);
+    position: relative;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Individual Screen View */
+.mobile-app-screen {
+    display: none;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+    background: var(--app-bg);
+    padding-bottom: 30px;
+    animation: screenFadeIn 0.22s ease-out;
+}
+
+.mobile-app-screen.active-screen {
+    display: flex;
+}
+
+@keyframes screenFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile Top App Bar */
+.screen-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    background: #ffffff;
+    border-bottom: 1px solid var(--app-border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.screen-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-screen-back {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--app-text);
+    padding: 4px 8px;
+    border-radius: 8px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-screen-back:hover {
+    background: #f1f5f9;
+}
+
+.screen-header-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--app-text);
+    margin: 0;
+}
+
+/* SCREEN 1: LOGIN SCREEN */
+#screen-login {
+    background: #0f172a;
+    color: #ffffff;
+    padding: 32px 24px;
+    justify-content: center;
+}
+
+.login-hero-card {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-building-img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.login-app-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0 0 4px 0;
+    color: #ffffff;
+}
+
+.login-app-subtitle {
+    font-size: 0.92rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+.login-input-group {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    gap: 10px;
+}
+
+.login-input-group input {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    width: 100%;
+    font-size: 0.95rem;
+    outline: none;
+}
+
+.login-input-group input::placeholder {
+    color: #64748b;
+}
+
+.btn-login-primary {
+    background: var(--app-blue);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    width: 100%;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: background 0.15s;
+}
+
+.btn-login-primary:hover {
+    background: var(--app-blue-hover);
+}
+
+.login-alt-btn {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    width: 100%;
+    cursor: pointer;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* SCREEN 2: STUDENT DASHBOARD */
+.dashboard-user-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: #ffffff;
+}
+
+.user-profile-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar-img {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--app-blue);
+}
+
+.user-greeting {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--app-text);
+    margin: 0;
+}
+
+.user-meta-info {
+    font-size: 0.82rem;
+    color: var(--app-text-muted);
+    margin: 0;
+}
+
+.btn-bell-notice {
+    position: relative;
+    background: #f1f5f9;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.bell-badge-count {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: var(--app-red);
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Geofence Green Status Card */
+.geofence-banner-card {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.geofence-bullet {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--app-green);
+    flex-shrink: 0;
+}
+
+.geofence-banner-text strong {
+    font-size: 0.92rem;
+    color: #065f46;
+    display: block;
+}
+
+.geofence-banner-text span {
+    font-size: 0.8rem;
+    color: #047857;
+}
+
+/* 3x4 Feature Grid */
+.dashboard-features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 4px 18px 20px 18px;
+}
+
+.feature-tile-btn {
+    background: #ffffff;
+    border: 1px solid var(--app-border);
+    border-radius: var(--app-radius);
+    padding: 16px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: var(--app-shadow);
+    transition: transform 0.15s, border-color 0.15s;
+}
+
+.feature-tile-btn:active,
+.feature-tile-btn:hover {
+    transform: translateY(-2px);
+    border-color: var(--app-blue);
+}
+
+.feature-icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.feature-tile-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--app-text);
+    line-height: 1.25;
+}
+
+/* Category Colors */
+.icon-gate { background: #fef3c7; color: #d97706; }
+.icon-mess { background: #fee2e2; color: #dc2626; }
+.icon-washing { background: #e0e7ff; color: #4f46e5; }
+.icon-sports { background: #dcfce7; color: #16a34a; }
+.icon-study-lab { background: #f3e8ff; color: #9333ea; }
+.icon-comp-lab { background: #e0f2fe; color: #0284c7; }
+.icon-attendance { background: #fef9c3; color: #ca8a04; }
+.icon-notices { background: #fae8ff; color: #c026d3; }
+.icon-complaints { background: #ffedd5; color: #ea580c; }
+.icon-leave { background: #ffe4e6; color: #e11d48; }
+.icon-profile { background: #e2e8f0; color: #475569; }
+.icon-help { background: #f1f5f9; color: #2563eb; }
+
+/* Sub-screen Content Layout */
+.screen-body {
+    padding: 16px 18px;
+}
+
+/* Pill Toggle Switcher (Entry / Exit, Check In / Out) */
+.pill-toggle-container {
+    background: #e2e8f0;
+    border-radius: 12px;
+    padding: 4px;
+    display: flex;
+    margin-bottom: 16px;
+    gap: 4px;
+}
+
+.pill-toggle-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    border-radius: 9px;
+    padding: 10px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--app-text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.pill-toggle-btn.active {
+    background: var(--app-blue);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+/* QR Viewfinder Scanner Box */
+.qr-viewfinder-card {
+    background: #0f172a;
+    border-radius: 18px;
+    padding: 30px 20px;
+    text-align: center;
+    color: #ffffff;
+    margin-bottom: 20px;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.qr-box-frame {
+    width: 170px;
+    height: 170px;
+    margin: 0 auto 16px auto;
+    border: 3px solid #38bdf8;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: rgba(15, 23, 42, 0.6);
+}
+
+.qr-box-label {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #94a3b8;
+    margin: 0;
+}
+
+/* Activity / History List Card */
+.activity-section-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--app-text);
+    margin: 0 0 12px 0;
+}
+
+.activity-item-card {
+    background: #ffffff;
+    border: 1px solid var(--app-border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.activity-item-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.activity-badge-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.activity-badge-dot.entry { background: #dcfce7; color: #16a34a; }
+.activity-badge-dot.exit { background: #fee2e2; color: #dc2626; }
+
+.activity-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--app-text);
+    margin: 0;
+}
+
+.activity-time {
+    font-size: 0.78rem;
+    color: var(--app-text-muted);
+    margin: 0;
+}
+
+/* SCREEN 4: MESS STYLES */
+.mess-menu-card {
+    background: #ffffff;
+    border: 1px solid var(--app-border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.mess-meal-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--app-border);
+}
+
+.mess-meal-row:last-child {
+    border-bottom: none;
+}
+
+.mess-meal-icon {
+    font-size: 1.5rem;
+}
+
+.mess-meal-name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--app-text);
+    margin: 0;
+}
+
+.mess-meal-desc {
+    font-size: 0.82rem;
+    color: var(--app-text-muted);
+    margin: 0;
+}
+
+.mess-diet-choice-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.btn-diet-veg {
+    flex: 1;
+    border: 2px solid var(--app-green);
+    background: #ffffff;
+    color: var(--app-green);
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-diet-veg.active {
+    background: var(--app-green);
+    color: #ffffff;
+}
+
+.btn-diet-nonveg {
+    flex: 1;
+    border: 2px solid var(--app-red);
+    background: #ffffff;
+    color: var(--app-red);
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-diet-nonveg.active {
+    background: var(--app-red);
+    color: #ffffff;
+}
+
+/* SCREEN 5: WASHING MACHINE CARDS */
+.machine-row-card {
+    background: #ffffff;
+    border: 1px solid var(--app-border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.machine-row-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.machine-row-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+.machine-row-icon.available { background: #dcfce7; color: #16a34a; }
+.machine-row-icon.busy { background: #fee2e2; color: #dc2626; }
+.machine-row-icon.maintenance { background: #f1f5f9; color: #64748b; }
+
+.machine-row-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--app-text);
+    margin: 0 0 2px 0;
+}
+
+.machine-row-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.machine-row-status.available { color: var(--app-green); }
+.machine-row-status.busy { color: var(--app-red); }
+.machine-row-status.maintenance { color: var(--app-text-muted); }
+
+.btn-machine-action {
+    background: var(--app-blue);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-machine-action.view {
+    background: #ffffff;
+    border: 1px solid var(--app-blue);
+    color: var(--app-blue);
+}
+
+.btn-machine-action.disabled {
+    background: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.booking-confirm-summary-card {
+    background: #ffffff;
+    border: 1px solid var(--app-border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 14px;
+}
+
+/* SCREEN 6 & 8: SPORTS & EQUIPMENT */
+.sports-subtabs-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.sports-subtab-btn {
+    flex: 1;
+    background: #ffffff;
+    border: 1px solid var(--app-border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--app-text-muted);
+    cursor: pointer;
+    text-align: center;
+}
+
+.sports-subtab-btn.active {
+    background: var(--app-blue);
+    color: #ffffff;
+    border-color: var(--app-blue);
+}
+
+.sport-item-row {
+    background: #ffffff;
+    border: 1px solid var(--app-border);
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.sport-item-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sport-item-icon {
+    font-size: 1.4rem;
+}
+
+.sport-item-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--app-text);
+}
+
+.sport-register-arrow {
+    color: var(--app-blue);
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+/* SCREEN 11: MORNING ATTENDANCE */
+.morning-att-hero {
+    background: #ffffff;
+    border: 1px solid var(--app-border);
+    border-radius: 18px;
+    padding: 24px 20px;
+    text-align: center;
+    margin-bottom: 18px;
+}
+
+.morning-att-hero h3 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--app-text);
+    margin: 0 0 6px 0;
+}
+
+.morning-att-time {
+    font-size: 0.92rem;
+    color: var(--app-text-muted);
+    margin-bottom: 18px;
+}
+
+.btn-mark-attendance {
+    background: var(--app-blue);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    width: 100%;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.week-circles-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+}
+
+.day-circle-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.day-circle-label {
+    font-size: 0.75rem;
+    color: var(--app-text-muted);
+}
+
+.day-circle-indicator {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.day-circle-indicator.present { background: #dcfce7; color: #16a34a; }
+.day-circle-indicator.absent { background: #fee2e2; color: #dc2626; }
+.day-circle-indicator.pending { background: #f1f5f9; color: #94a3b8; }
+
+/* SCREEN 12: ADMIN DASHBOARD METRIC TILES */
+.admin-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.admin-tile-card {
+    border-radius: 16px;
+    padding: 16px;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 90px;
+}
+
+.admin-tile-card.blue { background: #2563eb; }
+.admin-tile-card.orange { background: #ea580c; }
+.admin-tile-card.red { background: #dc2626; }
+.admin-tile-card.purple { background: #7c3aed; }
+.admin-tile-card.green { background: #16a34a; }
+.admin-tile-card.cyan { background: #0891b2; }
+
+.admin-tile-number {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.admin-tile-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    opacity: 0.95;
+    margin-top: 4px;
+}
+
+.admin-menu-list {
+    background: #ffffff;
+    border: 1px solid var(--app-border);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.admin-menu-row {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--app-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    color: var(--app-text);
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+.admin-menu-row:last-child {
+    border-bottom: none;
+}
+
+.admin-menu-row:hover {
+    background: #f8fafc;
+}

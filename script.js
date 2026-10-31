@@ -1589,6 +1589,8 @@
     }
 
     async function openBookingModal(machineId) {
+        window.openBookingModal = openBookingModal;
+        window.triggerBookingModal = openBookingModal;
         state.currentBookingMachineId = machineId;
         const machine = state.machines.find(m => m.id === machineId);
 
